@@ -1,0 +1,335 @@
+// MWAN Compliance Intelligence Engine — database schema
+// Table names match the model name exactly (Prisma default, quoted PascalCase e.g. "Carrier")
+// so the Python ML service's raw SQL (which quotes "Carrier", "Vehicle", etc.) lines up.
+// Column names are explicitly @map'd to snake_case for the same reason.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── LMS Data ──────────────────────────────────────────────
+
+model Carrier {
+  id                String        @id @default(uuid())
+  licenseNumber     String        @map("license_number")
+  companyName       String        @map("company_name")
+  companyNameEn     String?       @map("company_name_en")
+  companyId         String        @unique @map("company_id")
+  branchId          String?       @map("branch_id")
+  crNumber          String?       @map("cr_number")
+  licenseStatus     LicenseStatus @default(ACTIVE) @map("license_status")
+  licenseType       String        @default("TRANSPORT") @map("license_type")
+  serviceType       String        @map("service_type")
+  declaredFleetSize Int           @map("declared_fleet_size")
+  issueDate         DateTime      @map("issue_date")
+  endDate           DateTime      @map("end_date")
+  lastRenewalDate   DateTime?     @map("last_renewal_date")
+  email             String?
+  mobile            String?
+  city              String?
+  region            String?
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  declarations     Declaration[]
+  feePayments      FeePayment[]
+  vehicles         Vehicle[]
+  complianceScores ComplianceScore[]
+  inspections      Inspection[]
+  alerts           Alert[]
+  networkMembers   NetworkMembership[]
+  groundTruthLabel GroundTruthLabel?
+
+  @@index([companyId])
+  @@index([licenseStatus])
+  @@index([licenseNumber])
+}
+
+enum LicenseStatus {
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  REVOKED
+}
+
+model Declaration {
+  id              String   @id @default(uuid())
+  carrierId       String   @map("carrier_id")
+  carrier         Carrier  @relation(fields: [carrierId], references: [id])
+  period          String // "Q1-2024"
+  declaredFleet   Int      @map("declared_fleet")
+  changeVsPrior   Int      @default(0) @map("change_vs_prior")
+  changeReason    String?  @map("change_reason")
+  declarationDate DateTime @map("declaration_date")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([carrierId, period])
+}
+
+model FeePayment {
+  id            String        @id @default(uuid())
+  carrierId     String        @map("carrier_id")
+  carrier       Carrier       @relation(fields: [carrierId], references: [id])
+  invoiceNumber String        @unique @map("invoice_number")
+  invoiceDate   DateTime      @map("invoice_date")
+  dueDate       DateTime      @map("due_date")
+  amount        Decimal       @db.Decimal(12, 2)
+  amountPaid    Decimal       @db.Decimal(12, 2) @map("amount_paid")
+  paymentDate   DateTime?     @map("payment_date")
+  paymentStatus PaymentStatus @map("payment_status")
+  paymentMethod String?       @map("payment_method")
+  periodCovered String        @map("period_covered")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  @@index([carrierId])
+  @@index([paymentStatus])
+}
+
+enum PaymentStatus {
+  PAID
+  PARTIAL
+  OVERDUE
+}
+
+// ─── MOC Data ──────────────────────────────────────────────
+
+model CompanyRegistry {
+  id                  String    @id @default(uuid())
+  crNumber            String    @unique @map("cr_number")
+  companyName         String    @map("company_name")
+  companyId           String    @unique @map("company_id")
+  legalForm           String?   @map("legal_form")
+  incorporationDate   DateTime? @map("incorporation_date")
+  status              String    @default("ACTIVE")
+  registeredAddress   String?   @map("registered_address")
+  city                String?
+  region              String?
+  capital             Decimal?  @db.Decimal(15, 2)
+  activityDescription String?   @map("activity_description")
+  parentCompanyCr     String?   @map("parent_company_cr")
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  shareholders Shareholder[]
+  directors    Director[]
+
+  @@index([companyId])
+  @@index([registeredAddress])
+}
+
+model Shareholder {
+  id              String          @id @default(uuid())
+  companyId       String          @map("company_id")
+  company         CompanyRegistry @relation(fields: [companyId], references: [id])
+  name            String
+  nationalId      String          @map("national_id")
+  shareholderType String          @default("INDIVIDUAL") @map("shareholder_type")
+  ownershipPct    Decimal         @db.Decimal(5, 2) @map("ownership_pct")
+  role            String?
+  startDate       DateTime?       @map("start_date")
+  status          String          @default("ACTIVE")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  @@index([nationalId])
+  @@index([companyId])
+}
+
+model Director {
+  id            String          @id @default(uuid())
+  companyId     String          @map("company_id")
+  company       CompanyRegistry @relation(fields: [companyId], references: [id])
+  name          String
+  nationalId    String          @map("national_id")
+  position      String
+  appointedDate DateTime?       @map("appointed_date")
+  status        String          @default("ACTIVE")
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  @@index([nationalId])
+  @@index([companyId])
+}
+
+// ─── TGA/NAQL Data ─────────────────────────────────────────
+
+model Vehicle {
+  id                     String    @id @default(uuid())
+  plateNumber            String    @map("plate_number")
+  plateType              String?   @map("plate_type")
+  ownerCompanyId         String?   @map("owner_company_id")
+  carrier                Carrier?  @relation(fields: [ownerCompanyId], references: [companyId])
+  vehicleType            String?   @map("vehicle_type")
+  vehicleClassification  String?   @map("vehicle_classification")
+  grossWeight            Int?      @map("gross_weight")
+  capacity               Int?
+  registrationDate       DateTime? @map("registration_date")
+  registrationStatus     String    @default("ACTIVE") @map("registration_status")
+  lastInspectionDate     DateTime? @map("last_inspection_date")
+  insuranceExpiry        DateTime? @map("insurance_expiry")
+  createdAt              DateTime  @default(now()) @map("created_at")
+
+  @@index([ownerCompanyId])
+  @@index([registrationStatus])
+  @@index([plateNumber])
+}
+
+// ─── AI/ML Outputs ─────────────────────────────────────────
+
+model ComplianceScore {
+  id                   String   @id @default(uuid())
+  carrierId            String   @map("carrier_id")
+  carrier              Carrier  @relation(fields: [carrierId], references: [id])
+  overallScore         Decimal  @db.Decimal(5, 2) @map("overall_score") // 0-100
+  fleetGapScore        Decimal  @db.Decimal(5, 2) @map("fleet_gap_score")
+  predictionScore      Decimal  @db.Decimal(5, 2) @map("prediction_score")
+  networkRiskScore     Decimal  @db.Decimal(5, 2) @map("network_risk_score")
+  riskTier             RiskTier @map("risk_tier")
+  predictionConfidence Decimal  @db.Decimal(5, 4) @map("prediction_confidence")
+  topFactor1           String   @map("top_factor_1")
+  topFactor2           String   @map("top_factor_2")
+  topFactor3           String   @map("top_factor_3")
+  modelVersion         String   @map("model_version")
+  computedAt           DateTime @default(now()) @map("computed_at")
+
+  @@index([carrierId])
+  @@index([riskTier])
+  @@index([computedAt])
+}
+
+enum RiskTier {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+model OwnershipNetwork {
+  id               String   @id @default(uuid())
+  networkName      String?  @map("network_name")
+  primaryOwnerId   String   @map("primary_owner_id") // National ID of controlling owner
+  primaryOwnerName String   @map("primary_owner_name")
+  memberCount      Int      @map("member_count")
+  totalDeclared    Int      @map("total_declared")
+  totalActual      Int      @map("total_actual")
+  combinedGap      Int      @map("combined_gap")
+  sharedAddress    String?  @map("shared_address")
+  detectedAt       DateTime @default(now()) @map("detected_at")
+  status           String   @default("ACTIVE")
+
+  members NetworkMembership[]
+
+  @@index([primaryOwnerId])
+}
+
+model NetworkMembership {
+  id        String           @id @default(uuid())
+  networkId String           @map("network_id")
+  network   OwnershipNetwork @relation(fields: [networkId], references: [id])
+  carrierId String           @map("carrier_id")
+  carrier   Carrier          @relation(fields: [carrierId], references: [id])
+  role      String           @default("MEMBER") // PARENT, MEMBER
+
+  @@unique([networkId, carrierId])
+}
+
+// ─── Inspections & Feedback Loop ───────────────────────────
+
+model Inspection {
+  id              String             @id @default(uuid())
+  carrierId       String             @map("carrier_id")
+  carrier         Carrier            @relation(fields: [carrierId], references: [id])
+  scheduledDate   DateTime           @map("scheduled_date")
+  inspectorName   String?            @map("inspector_name")
+  status          InspectionStatus   @default(SCHEDULED)
+  outcome         InspectionOutcome?
+  actualFleetSize Int?               @map("actual_fleet_size")
+  notes           String?
+  completedAt     DateTime?          @map("completed_at")
+  createdAt       DateTime           @default(now()) @map("created_at")
+
+  @@index([carrierId])
+  @@index([status])
+}
+
+enum InspectionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum InspectionOutcome {
+  CONFIRMED_UNDER_DECLARATION
+  NO_VIOLATION_FOUND
+  PARTIAL_VIOLATION
+  NETWORK_FRAGMENTATION_DETECTED
+}
+
+model Alert {
+  id          String   @id @default(uuid())
+  carrierId   String   @map("carrier_id")
+  carrier     Carrier  @relation(fields: [carrierId], references: [id])
+  alertType   String   @map("alert_type") // FLEET_GAP_DETECTED, RISK_THRESHOLD_CROSSED, NEW_VEHICLE_UNREGISTERED
+  severity    RiskTier
+  title       String
+  description String
+  titleEn     String?  @map("title_en")
+  descriptionEn String? @map("description_en")
+  isRead      Boolean  @default(false) @map("is_read")
+  isDismissed Boolean  @default(false) @map("is_dismissed")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([carrierId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// ─── Model Lifecycle ───────────────────────────────────────
+
+model ModelVersion {
+  id              String   @id @default(uuid())
+  modelType       String   @map("model_type") // PREDICTION, DETECTION, NETWORK
+  version         String
+  accuracy        Decimal? @db.Decimal(5, 4)
+  precision_      Decimal? @db.Decimal(5, 4) @map("precision")
+  recall          Decimal? @db.Decimal(5, 4)
+  f1Score         Decimal? @db.Decimal(5, 4) @map("f1_score")
+  aucRoc          Decimal? @db.Decimal(5, 4) @map("auc_roc")
+  trainingSamples Int?     @map("training_samples")
+  trainedAt       DateTime @default(now()) @map("trained_at")
+  isActive        Boolean  @default(false) @map("is_active")
+  notes           String?
+
+  @@index([modelType, isActive])
+}
+
+// ─── Ground Truth (bootstrap training data + inspection history) ──
+// Seeded from the "Ground_Truth_Labels" sheet in Synthetic_Data_500_Companies.xlsx.
+// ml-service/app.py reads this unquoted (`ground_truth_labels`), so it must stay
+// lowercase/snake_case, unlike the other tables which use quoted PascalCase.
+
+model GroundTruthLabel {
+  id                    String    @id @default(uuid())
+  carrierId             String    @unique @map("carrier_id")
+  carrier               Carrier   @relation(fields: [carrierId], references: [id])
+  companyId             String    @map("company_id")
+  companyName           String    @map("company_name")
+  licenseNumber         String    @map("license_number")
+  declaredFleet         Int       @map("declared_fleet")
+  actualFleetTga        Int       @map("actual_fleet_tga")
+  fleetGap              Int       @map("fleet_gap")
+  fleetGapPct           Decimal   @db.Decimal(6, 2) @map("fleet_gap_pct")
+  complianceStatus      String    @map("compliance_status")
+  underDeclarationLabel Int       @map("under_declaration_label") // 0/1 — ML training label
+  affiliatedNetworkId   String?   @map("affiliated_network_id")
+  inspectionOutcome     String?   @map("inspection_outcome")
+  inspectionDate        DateTime? @map("inspection_date")
+  inspectorNotes        String?   @map("inspector_notes")
+  riskTier              String?   @map("risk_tier")
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  @@map("ground_truth_labels")
+}
