@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Noto_Kufi_Arabic, Inter, JetBrains_Mono } from "next/font/google";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
@@ -42,16 +41,37 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       className={`${notoKufiArabic.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <head>
-        <Script
-          id="no-flash-locale"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }}
-        />
+        {/* A PLAIN <script>, not next/script — and this was a real bug, not a
+            console nuisance.
+            next/script with strategy="beforeInteractive" never emitted a script
+            tag here at all: the body was serialised into the RSC payload and
+            NEVER EXECUTED, so the no-flash guard had been silently dead and an
+            en-locale visitor got a flash of Arabic/RTL on every load — precisely
+            what it exists to prevent. It also logged "Encountered a script tag
+            while rendering React component" in dev, which was the symptom.
+            Two reasons next/script is the wrong tool here:
+              1. Docs (script.md:156): beforeInteractive scripts are ALWAYS
+                 injected into <head> regardless of placement — so hand-placing
+                 one inside <head> is both redundant and what triggered the error.
+              2. beforeInteractive is documented around `src` (script.md:52: src
+                 is "required unless an inline script is used") and is designed to
+                 preload EXTERNAL scripts before hydration. It explicitly does not
+                 block hydration — but this guard must run synchronously during
+                 head parse, BEFORE first paint, or the flash happens anyway.
+            A raw inline <script> in <head> is parser-blocking by definition,
+            which is exactly the guarantee this needs. */}
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>
-      <body className="min-h-full flex font-arabic">
+      {/* p-3 + gap-3 is what makes the shell FLOAT: the canvas is visible around
+          every panel, so the canvas itself becomes the separator and no panel
+          needs a border. min-w-0 on <main> is load-bearing — a flex child
+          defaults to min-width:auto and will refuse to shrink below its content,
+          which lets a wide table blow the layout out horizontally instead of
+          scrolling inside its own container. */}
+      <body className="min-h-screen flex gap-3 p-3 font-arabic">
         <LocaleProvider>
           <Sidebar />
-          <main className="flex-1 overflow-y-auto p-6">{children}</main>
+          <main className="flex-1 min-w-0">{children}</main>
         </LocaleProvider>
       </body>
     </html>

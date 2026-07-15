@@ -1,8 +1,12 @@
 "use client";
 import useSWR from "swr";
-import { BarChart3, Target, Activity } from "lucide-react";
 import { StatCard } from "@/components/shared/StatCard";
 import { RetrainButton } from "@/components/analytics/RetrainButton";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card, CardFlush } from "@/components/ui/Card";
+import { CardHeader } from "@/components/ui/CardHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Table, Thead, Th, Tbody, Tr, Td } from "@/components/ui/Table";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -31,57 +35,69 @@ export default function AnalyticsPage() {
   const active = data?.active;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-mwan-charcoal">{t("analytics.title")}</h1>
-          <p className="text-sm text-gray-500 mt-1">{t("analytics.subtitle")}</p>
-        </div>
-        <RetrainButton onDone={() => mutate()} />
-      </div>
+    <div className="space-y-3">
+      <PageHeader
+        title={t("analytics.title")}
+        subtitle={t("analytics.subtitle")}
+        action={<RetrainButton onDone={() => mutate()} />}
+      />
 
       {!active && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm text-sm text-gray-400">
-          {t("analytics.noModelYet")}
-        </div>
+        <Card>
+          <EmptyState>{t("analytics.noModelYet")}</EmptyState>
+        </Card>
       )}
 
       {active && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label={t("analytics.accuracy")} value={pct(active.accuracy)} icon={Target} />
-            <StatCard label={t("analytics.precision")} value={pct(active.precision)} icon={BarChart3} />
-            <StatCard label={t("analytics.recall")} value={pct(active.recall)} icon={Activity} />
-            <StatCard label={t("analytics.aucRoc")} value={pct(active.aucRoc)} icon={Target} />
+            <StatCard label={t("analytics.accuracy")} value={pct(active.accuracy)} />
+            <StatCard label={t("analytics.precision")} value={pct(active.precision)} />
+            <StatCard label={t("analytics.recall")} value={pct(active.recall)} />
+            <StatCard label={t("analytics.aucRoc")} value={pct(active.aucRoc)} />
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-            <h3 className="text-lg font-semibold mb-4">{t("analytics.versionHistory")}</h3>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs uppercase text-gray-400 text-start">
-                  <th className="text-start py-2">{t("analytics.version")}</th>
-                  <th className="text-start py-2">{t("analytics.accuracy")}</th>
-                  <th className="text-start py-2">{t("analytics.trainedAt")}</th>
-                </tr>
-              </thead>
-              <tbody>
+          {/* CardFlush, not Card: the table must bleed to the card edge and own
+              its own cell padding (see Card.tsx's docblock on why a table in a
+              padded Card is wrong, not a matter of taste). CardHeader is built
+              for a padded card, so it gets its own p-5 pb-0 wrapper here instead
+              of living inside CardFlush's unpadded body. */}
+          <CardFlush>
+            <div className="p-5 pb-0">
+              <CardHeader title={t("analytics.versionHistory")} />
+            </div>
+            <Table>
+              <Thead>
+                <Th>{t("analytics.version")}</Th>
+                <Th>{t("analytics.accuracy")}</Th>
+                <Th>{t("analytics.trainedAt")}</Th>
+              </Thead>
+              <Tbody>
                 {data?.history.map((h, i) => (
-                  <tr key={i} className="border-t border-gray-100">
-                    <td className="py-2 font-mono" dir="ltr">
-                      {h.version} {h.isActive && <span className="text-mwan-green">●</span>}
-                    </td>
-                    <td className="py-2 font-mono" dir="ltr">
-                      {pct(h.accuracy)}
-                    </td>
-                    <td className="py-2 font-mono" dir="ltr">
-                      {new Date(h.trainedAt).toLocaleString(locale === "ar" ? "ar-SA" : "en-US")}
-                    </td>
-                  </tr>
+                  <Tr key={i}>
+                    {/* Not <Td num>: this cell mixes the version number with a
+                        text chip. Td num's font-mono + dir="ltr" would leak
+                        onto the chip's Arabic label, so the digit run is
+                        isolated by hand and the chip stays outside it. */}
+                    <Td>
+                      <span className="inline-flex items-center gap-2">
+                        <span dir="ltr" className="font-mono tabular-nums">
+                          {h.version}
+                        </span>
+                        {h.isActive && (
+                          <span className="rounded-control bg-surface-sunken px-2 py-0.5 text-caption font-medium text-forest">
+                            {t("analytics.active")}
+                          </span>
+                        )}
+                      </span>
+                    </Td>
+                    <Td num>{pct(h.accuracy)}</Td>
+                    <Td num>{new Date(h.trainedAt).toLocaleString(locale === "ar" ? "ar-SA" : "en-US")}</Td>
+                  </Tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </Tbody>
+            </Table>
+          </CardFlush>
         </>
       )}
     </div>

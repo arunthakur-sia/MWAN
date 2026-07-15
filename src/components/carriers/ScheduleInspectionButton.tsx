@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarPlus } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 export function ScheduleInspectionButton({ carrierId }: { carrierId: string }) {
@@ -26,13 +27,9 @@ export function ScheduleInspectionButton({ carrierId }: { carrierId: string }) {
   }
 
   return (
-    <button
-      onClick={schedule}
-      disabled={loading}
-      className="inline-flex items-center gap-2 rounded-lg bg-mwan-green px-4 py-2 text-sm font-medium text-white hover:bg-mwan-green-hover disabled:opacity-50 transition-colors"
-    >
+    <Button variant="canvas" onClick={schedule} disabled={loading}>
       <CalendarPlus size={16} />
       {loading ? t("carrierDetail.scheduling") : t("carrierDetail.scheduleInspection")}
-    </button>
+    </Button>
   );
 }

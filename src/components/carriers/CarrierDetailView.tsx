@@ -4,6 +4,11 @@ import { RiskBadge } from "@/components/shared/RiskBadge";
 import { ComplianceScore } from "@/components/carriers/ComplianceScore";
 import { FleetTimeline } from "@/components/carriers/FleetTimeline";
 import { ScheduleInspectionButton } from "@/components/carriers/ScheduleInspectionButton";
+import { StatCard } from "@/components/shared/StatCard";
+import { Card } from "@/components/ui/Card";
+import { CardHeader } from "@/components/ui/CardHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader, BackLink } from "@/components/ui/PageHeader";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { localizeAlert } from "@/lib/i18n/localizeAlert";
 
@@ -52,54 +57,43 @@ export function CarrierDetailView({ data }: { data: CarrierDetailData }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <Link href="/carriers" className="text-sm text-mwan-green hover:underline">
-            ← {t("carrierDetail.back")}
+    <div className="space-y-3">
+      <PageHeader
+        /* <bdi> isolates the Arabic company name inside a possibly-English UI. */
+        title={<bdi>{data.companyName}</bdi>}
+        back={
+          <Link href="/carriers">
+            <BackLink>{t("carrierDetail.back")}</BackLink>
           </Link>
-          <h1 className="text-2xl font-semibold text-mwan-charcoal mt-1">{data.companyName}</h1>
-          <div className="flex items-center gap-3 mt-2 text-sm text-gray-500">
-            <span className="font-mono" dir="ltr">
+        }
+        meta={
+          <>
+            <span dir="ltr" className="font-mono tabular-nums">
               {data.licenseNumber}
             </span>
-            <span>·</span>
+            <span aria-hidden="true">·</span>
             <span>{data.serviceType}</span>
-            <span>·</span>
+            <span aria-hidden="true">·</span>
             <span>
               {data.city}
               {data.city && data.region ? "، " : ""}
               {data.region}
             </span>
             {data.score && <RiskBadge tier={data.score.riskTier} />}
-          </div>
-        </div>
-        <ScheduleInspectionButton carrierId={data.id} />
-      </div>
+          </>
+        }
+        action={<ScheduleInspectionButton carrierId={data.id} />}
+      />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <p className="text-xs text-gray-500">{t("carrierDetail.declaredFleet")}</p>
-          <p className="text-xl font-bold font-mono" dir="ltr">
-            {data.declaredFleetSize}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <p className="text-xs text-gray-500">{t("carrierDetail.actualFleet")}</p>
-          <p className="text-xl font-bold font-mono" dir="ltr">
-            {data.actualFleet}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <p className="text-xs text-gray-500">{t("carrierDetail.gap")}</p>
-          <p className={`text-xl font-bold font-mono ${fleetGap > 0 ? "text-risk-high" : ""}`} dir="ltr">
-            {fleetGap > 0 ? `+${fleetGap}` : fleetGap}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <p className="text-xs text-gray-500">{t("carrierDetail.licenseStatus")}</p>
-          <p className="text-xl font-bold">{data.licenseStatus}</p>
-        </div>
+        <StatCard label={t("carrierDetail.declaredFleet")} value={data.declaredFleetSize} />
+        <StatCard label={t("carrierDetail.actualFleet")} value={data.actualFleet} />
+        <StatCard
+          label={t("carrierDetail.gap")}
+          value={fleetGap > 0 ? `+${fleetGap}` : fleetGap}
+          tone={fleetGap > 0 ? "high" : "default"}
+        />
+        <StatCard label={t("carrierDetail.licenseStatus")} value={data.licenseStatus} />
       </div>
 
       {data.score ? (
@@ -111,98 +105,115 @@ export function CarrierDetailView({ data }: { data: CarrierDetailData }) {
           confidence={data.score.predictionConfidence}
         />
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm text-sm text-gray-400">
-          {t("carrierDetail.noScoreYet")}
-        </div>
+        <Card>
+          <p className="text-body text-ink-muted">{t("carrierDetail.noScoreYet")}</p>
+        </Card>
       )}
 
       <FleetTimeline carrierId={data.id} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">{t("carrierDetail.ownership")}</h3>
-          {data.registry ? (
-            <div className="space-y-4 text-sm">
-              <div>
-                <p className="text-gray-500 text-xs mb-1">{t("carrierDetail.legalForm")}</p>
-                <p>{data.registry.legalForm}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <Card>
+          <CardHeader title={t("carrierDetail.ownership")} />
+          <div className="pt-4">
+            {data.registry ? (
+              <div className="space-y-4 text-body">
+                <div>
+                  <p className="text-caption text-ink-muted mb-1">{t("carrierDetail.legalForm")}</p>
+                  <p className="text-ink">{data.registry.legalForm}</p>
+                </div>
+                <div>
+                  <p className="text-caption text-ink-muted mb-2">{t("carrierDetail.shareholders")}</p>
+                  <ul className="space-y-1">
+                    {data.registry.shareholders.map((s) => (
+                      <li key={s.id} className="flex justify-between gap-2">
+                        <bdi className="text-ink">{s.name}</bdi>
+                        <span dir="ltr" className="font-mono tabular-nums text-ink-muted">
+                          {s.ownershipPct}%
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-caption text-ink-muted mb-2">{t("carrierDetail.directors")}</p>
+                  <ul className="space-y-1">
+                    {data.registry.directors.map((d) => (
+                      <li key={d.id} className="flex justify-between gap-2">
+                        <bdi className="text-ink">{d.name}</bdi>
+                        <span className="text-ink-muted">{d.position}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-500 text-xs mb-2">{t("carrierDetail.shareholders")}</p>
-                <ul className="space-y-1">
-                  {data.registry.shareholders.map((s) => (
-                    <li key={s.id} className="flex justify-between">
-                      <span>{s.name}</span>
-                      <span className="font-mono text-gray-500" dir="ltr">
-                        {s.ownershipPct}%
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="text-gray-500 text-xs mb-2">{t("carrierDetail.directors")}</p>
-                <ul className="space-y-1">
-                  {data.registry.directors.map((d) => (
-                    <li key={d.id} className="flex justify-between">
-                      <span>{d.name}</span>
-                      <span className="text-gray-500">{d.position}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-gray-400">{t("carrierDetail.noRegistry")}</p>
-          )}
+            ) : (
+              <EmptyState>{t("carrierDetail.noRegistry")}</EmptyState>
+            )}
 
-          {data.networkMembers.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <p className="text-gray-500 text-xs mb-2">{t("carrierDetail.networkMembership")}</p>
-              {data.networkMembers.map((m) => (
-                <Link
-                  key={m.id}
-                  href={`/networks/${m.networkId}`}
-                  className="block text-sm text-mwan-green hover:underline"
-                >
-                  {m.primaryOwnerName} — {m.memberCount} {t("carrierDetail.networkLinkedCompanies")}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-            <h3 className="text-lg font-semibold mb-4">{t("carrierDetail.recentInspections")}</h3>
-            {data.inspections.length === 0 && <p className="text-sm text-gray-400">{t("carrierDetail.noInspections")}</p>}
-            <ul className="space-y-2">
-              {data.inspections.map((i) => (
-                <li key={i.id} className="flex items-center justify-between text-sm">
-                  <Link href={`/inspections/${i.id}`} className="hover:text-mwan-green">
-                    {new Date(i.scheduledDate).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")}
+            {data.networkMembers.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="text-caption text-ink-muted mb-2">{t("carrierDetail.networkMembership")}</p>
+                {data.networkMembers.map((m) => (
+                  <Link
+                    key={m.id}
+                    href={`/networks/${m.networkId}`}
+                    className="block text-body text-forest hover:underline underline-offset-2"
+                  >
+                    <bdi>{m.primaryOwnerName}</bdi> —{" "}
+                    <span dir="ltr" className="font-mono tabular-nums">
+                      {m.memberCount}
+                    </span>{" "}
+                    {t("carrierDetail.networkLinkedCompanies")}
                   </Link>
-                  <span className="text-gray-500">{i.outcome ?? i.status}</span>
-                </li>
-              ))}
-            </ul>
+                ))}
+              </div>
+            )}
           </div>
+        </Card>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-            <h3 className="text-lg font-semibold mb-4">{t("carrierDetail.activeAlerts")}</h3>
-            {data.alerts.length === 0 && <p className="text-sm text-gray-400">{t("carrierDetail.noActiveAlerts")}</p>}
-            <ul className="space-y-2">
-              {data.alerts.map((a) => {
-                const localized = localizeAlert(a, locale);
-                return (
-                  <li key={a.id} className="flex items-start gap-2 text-sm">
-                    <RiskBadge tier={a.severity} />
-                    <span>{localized.title}</span>
+        <div className="space-y-3">
+          <Card>
+            <CardHeader title={t("carrierDetail.recentInspections")} />
+            <div className="pt-4">
+              {data.inspections.length === 0 && <EmptyState>{t("carrierDetail.noInspections")}</EmptyState>}
+              <ul className="space-y-2">
+                {data.inspections.map((i) => (
+                  <li key={i.id} className="flex items-center justify-between text-body">
+                    <Link href={`/inspections/${i.id}`} className="text-ink hover:text-forest">
+                      {/* The ar-SA branch is DELIBERATE and must stay: it resolves to the
+                          islamic-umalqura calendar, so Arabic readers see a Hijri date. That
+                          is product behaviour, not formatting — this redesign is UI-only and
+                          does not get to change what a date MEANS. (The en-US digit rule
+                          applies to NUMBERS, which is a mono-font alignment concern.) */}
+                      <span dir="ltr">
+                        {new Date(i.scheduledDate).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")}
+                      </span>
+                    </Link>
+                    <span className="text-ink-muted">{i.outcome ?? i.status}</span>
                   </li>
-                );
-              })}
-            </ul>
-          </div>
+                ))}
+              </ul>
+            </div>
+          </Card>
+
+          <Card>
+            <CardHeader title={t("carrierDetail.activeAlerts")} />
+            <div className="pt-4">
+              {data.alerts.length === 0 && <EmptyState>{t("carrierDetail.noActiveAlerts")}</EmptyState>}
+              <ul className="space-y-2">
+                {data.alerts.map((a) => {
+                  const localized = localizeAlert(a, locale);
+                  return (
+                    <li key={a.id} className="flex items-start gap-2 text-body">
+                      <RiskBadge tier={a.severity} />
+                      <span className="text-ink">{localized.title}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </Card>
         </div>
       </div>
     </div>

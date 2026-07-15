@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { Button } from "@/components/ui/Button";
 
 export function RetrainButton({ onDone }: { onDone: () => void }) {
   const [loading, setLoading] = useState(false);
@@ -27,15 +28,14 @@ export function RetrainButton({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="flex items-center gap-3">
-      <button
-        onClick={retrain}
-        disabled={loading}
-        className="inline-flex items-center gap-2 rounded-lg bg-mwan-green px-4 py-2 text-sm font-medium text-white hover:bg-mwan-green-hover disabled:opacity-50 transition-colors"
-      >
+      {/* canvas, not primary/secondary: this button now sits on the dark
+          PageHeader canvas, where a white/forest fill would be the loudest
+          thing on the page. canvas is mint on a translucent lift instead. */}
+      <Button variant="canvas" onClick={retrain} disabled={loading}>
         <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
         {loading ? t("analytics.retraining") : t("analytics.retrain")}
-      </button>
-      {message && <span className="text-sm text-gray-500">{message}</span>}
+      </Button>
+      {message && <span className="text-body text-mint/80">{message}</span>}
     </div>
   );
 }

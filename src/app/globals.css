@@ -1,31 +1,267 @@
+/* src/app/globals.css — COMPLETE replacement, paste as-is.
+   INVARIANT: raw hex may appear in exactly TWO files — this one, and
+   src/lib/design/tokens.ts (the JS mirror recharts/d3 read, because they take
+   color as props and cannot follow CSS vars). Nowhere else. There is no red. */
+
 @import "tailwindcss";
 
 :root {
-  --background: #f9fafb;
-  --foreground: #353535;
+  /* ── Brand — sampled from the client landing page ── */
+  --brand-forest:       #074d31;
+  --brand-forest-700:   #2a5f46;
+  --brand-green:        #1aa165;
+  --brand-green-hover:  #158454;
+  --brand-mint:         #cbe5db;
+  --brand-amber:        #ff8b00;  /* DISPLAY ONLY — 2.35:1 on white, never text/bg-with-text */
+  --brand-blue:         #0074d7;
+
+  /* ── Ink & surface ──
+     --ink is forest darkened, not a new hue. 15.8:1 on --surface-sunken.
+     --ink-muted is deliberately the SAME value as --risk-low (see ramp). */
+  --ink:            #10231b;
+  --ink-muted:      #556070;
+  --surface:        #ffffff;
+  --surface-sunken: #f3f4f6;
+  --border:         #e2e6e4;
+  --border-strong:  #c4ccc8;
+
+  /* ── Risk ramp — escalation by FILL WEIGHT, not hue. AA verified.
+     HIGH   solid fill, white text          5.79 on fill / 5.75 as text on white
+     MEDIUM same hue, tint bg + dark text   4.76 on tint / 5.01 as text on white
+     LOW    outline only, recedes           6.38 on white
+     LOW is literally --ink-muted: "low risk" means "recedes to the weight of a
+     caption." One value, two roles, one idea. ── */
+  --risk-high:        #a24e00;
+  --risk-medium:      #b45309;
+  --risk-medium-tint: #fff7ed;
+  --risk-low:         #556070;
+
+  /* ── The NOTICE surface: a large warm panel, and deliberately NOT
+     --risk-medium-tint even though they are neighbours.
+
+     THE AREA EFFECT IS THE WHOLE REASON THEY DIFFER. --risk-medium-tint is
+     tuned for a RiskBadge chip — a ~60px swatch, where its chroma reads as a
+     hint. The same value across a full-width banner reads as a yellow field:
+     a large area of a colour reads more saturated than a small one, so one
+     value cannot serve both jobs. Sharing it made the banner "too bright".
+
+     AND THE FIX WAS CHROMA, NOT LIGHTNESS — the opposite of the canvas search,
+     which is exactly why it was measured rather than eyeballed:
+       #fff7ed  OKLCH L .980  C .0158   <- lightness is already ~white's
+       #fffaf4  OKLCH L .987  C .0096   <- 39% less chroma, warmth intact
+     Both sit at essentially white's lightness, so "bright" was never about
+     luminance; the yellow came from carrying chroma AT that lightness.
+
+     WHY SO LITTLE TINT IS NEEDED AT ALL: on a WHITE page (the reference this
+     was copied from) a cream panel is 1.06:1 against its ground — the tint is
+     the only thing separating it, so it must be assertive. On THIS dark canvas
+     any light panel is already ~12:1 and separates for free. The tint's
+     original job is done by the canvas, so what is left of it is decoration and
+     it should be dialled to a cue, not a field. Measured on #fffaf4: title
+     15.83, body 6.14, accent 4.84 — all improve. ── */
+  --surface-notice:   #fffaf4;
+
+  /* ── Shell gradient. 180deg (to-bottom) is DELIBERATE and load-bearing:
+     a horizontal gradient is a PHYSICAL direction and would reverse when the
+     locale toggles ar/rtl -> en/ltr. Vertical is direction-agnostic.
+     --shell-to is DARKER than --shell-from, never lighter: text on a gradient
+     must clear AA at the WORST stop, and darkening only improves mint (7.46)
+     and white (9.93). A lighter stop would silently erode both. ── */
+  --shell-from: #074d31;
+  --shell-to:   #04331f;
+
+  /* ── THE CANVAS. The real fix for "it looks like concrete".
+     Two attempts at a better grey both failed, because the grey was never the
+     problem — the STRUCTURE was. A light-grey page with cards on it puts the
+     cards and the ground at the same lightness, so nothing floats and the ground
+     reads as a slab. Inverting it costs nothing and changes everything: a dark
+     canvas with white panels floating on it, separation carried by the canvas
+     showing through rather than by borders.
+     A LIGHTER GREEN, arrived at by overshooting twice in both directions:
+       #06291d  chroma 35, L .0171  — too dark AND too green
+       #2b3330  chroma  8, L .0309  — killed the green; read as charcoal
+       #16402e  chroma 42, L .0403  — 2.4x lighter than the first, green intact
+     The lesson: "too green" was really "too dark". Chroma was never the problem;
+     a deep, dense green reads oppressive, while the SAME green raised in
+     lightness reads as a canvas. So the fix was lightness, not desaturation.
+
+     The full search, so nobody re-runs it:
+       #f3f4f6  chroma  3, L .9   — the original. Blue-tinted grey: "concrete".
+       #06291d  chroma 35, L .0171 — too dark AND too green.
+       #2b3330  chroma  8, L .0309 — desaturated instead of lightened: "grey".
+       #16402e  chroma 42, L .0403 — green right, a touch light.
+       #e4efe8  chroma 11, L .81   — tried light sage; didn't work (see below).
+       #12392a  chroma 39, L .0322 — FINAL. 20% darker than #16402e, green kept.
+
+     TWO THINGS THIS SEARCH ACTUALLY PROVED:
+     1. "Too green" was really "too dark". The final canvas is MORE saturated
+        (39) than the one called too green (35) — a deep dense green reads
+        oppressive; the same green raised in lightness reads as a canvas.
+        Lightness was the lever the whole time, not chroma.
+     2. Light grounds fail HERE for a structural reason, not a taste one: on a
+        dark canvas the ground separates the cards for free (white-on-dark =
+        ~12:1), so panels float unaided. Any light ground collapses that to
+        ~1.2:1 and shadow must do the entire job — which is why the very first
+        #f3f4f6 attempt read as a slab, and why sage was no better.
+
+     THE CEILING IS NOT A TASTE CALL: the forest shell sits at L .0557 and the
+     canvas MUST stay below it, or the sidebar stops reading as raised and the
+     floating structure collapses. At L .0322 the shell lifts 1.73x. ── */
+  --canvas-from: #12392a;
+  --canvas-to:   #0a2418;
+
+  --background: var(--surface-sunken);
+  --foreground: var(--ink);
+}
+
+/* The shell's surface. A single flat fill is the 2000s admin-panel tell; the
+   gradient gives the panel a light source and lets the nav pills read as
+   floating ON it rather than being holes cut INTO it. */
+.shell-surface {
+  background-image: linear-gradient(180deg, var(--shell-from) 0%, var(--shell-to) 100%);
 }
 
 @theme inline {
+  /* ── Fonts — FROZEN. Do not add, remove, or swap. ── */
+  --font-arabic: var(--font-noto-kufi-arabic);
+  --font-sans:   var(--font-inter);
+  --font-mono:   var(--font-jetbrains-mono);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  --font-arabic: var(--font-noto-kufi-arabic);
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-jetbrains-mono);
+  /* ── Brand ── */
+  --color-forest:       var(--brand-forest);
+  --color-forest-700:   var(--brand-forest-700);
+  --color-green:        var(--brand-green);
+  --color-green-hover:  var(--brand-green-hover);
+  --color-mint:         var(--brand-mint);
+  --color-amber:        var(--brand-amber);
 
-  --color-mwan-green: #469a57;
-  --color-mwan-green-light: #e8f5eb;
-  --color-mwan-green-hover: #3a8349;
-  --color-mwan-green-dark: #2e6b3a;
-  --color-mwan-charcoal: #353535;
+  /* ── Semantic roles ── */
+  --color-ink:            var(--ink);
+  --color-ink-muted:      var(--ink-muted);
+  --color-surface:        var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-notice: var(--surface-notice);
+  --color-border:         var(--border);
+  --color-border-strong:  var(--border-strong);
 
-  --color-risk-high: #dc2626;
-  --color-risk-medium: #f59e0b;
-  --color-risk-low: #469a57;
-  --color-info: #2563eb;
+  /* ── Risk ramp ── */
+  --color-risk-high:        var(--risk-high);
+  --color-risk-medium:      var(--risk-medium);
+  --color-risk-medium-dark: var(--risk-medium);      /* kills text-amber-700 */
+  --color-risk-medium-tint: var(--risk-medium-tint);
+  --color-risk-low:         var(--risk-low);
+  --color-info:             var(--brand-blue);       /* was #2563eb, now real brand blue */
+
+  /* DELETED: the --color-mwan-* aliases. This block existed for exactly one
+     reason — the other five pages still referenced them — and its own comment
+     set the deletion condition: "Delete this block when the other pages
+     migrate." They have. Nothing in src/ references an mwan-* class.
+
+     They were never harmless. --color-mwan-charcoal resolved to --ink, and every
+     unmigrated page used it for its <h1>; once the pilot inverted the canvas to
+     dark green that rendered ink-on-canvas at 1.29:1 — five page titles nobody
+     could read. The alias is what let a colour outlive the surface it was chosen
+     for. That is the failure mode a token layer exists to prevent, so the alias
+     had to die for the layer to mean anything.
+     If you are here because a build broke on an mwan-* class: the replacement is
+     text-ink / text-forest on a LIGHT surface, and text-white / text-mint on the
+     canvas or shell. Do not re-add the alias. ── */
+
+  /* ── Radius. 14px: on a dark canvas the radius IS the separation device, so it
+     has to be legible rather than apologetic. Still short of a 20px consumer
+     bubble. ── */
+  --radius-card:    0.875rem;    /* 14px — cards, panels */
+  --radius-shell:   1.125rem;    /* 18px — the floating sidebar panel */
+  --radius-control: 0.5rem;      /*  8px — buttons, chips, bars */
+
+  /* ── Shadow ramp. The old single shadow (a 1px smudge) is why the cards read
+     as "vanilla": one tight shadow states an edge but never a light source.
+     Real depth needs TWO shadows — a tight contact shadow that anchors the card
+     to the surface, and a wide diffuse one that lifts it off. Both are tinted
+     with --ink (a green-black) rather than neutral black: a pure-black shadow
+     on a green-tinted page reads muddy. ── */
+  /* DARK-CANVAS SHADOWS. On a dark ground a soft grey shadow is invisible —
+     there is nothing lighter for it to darken. Depth comes instead from a deep,
+     tight shadow that reads as the panel OCCLUDING the canvas, so these are far
+     darker than a light-mode ramp would be. */
+  --shadow-card:
+    0 1px 2px -1px rgb(2 12 8 / 0.30),
+    0 10px 24px -12px rgb(2 12 8 / 0.45);
+  --shadow-card-lift:
+    0 2px 6px -2px rgb(2 12 8 / 0.36),
+    0 18px 40px -14px rgb(2 12 8 / 0.55);
+  /* Inset, for bar TRACKS — a groove reads as recessed, so the fill reads as
+     sitting IN something rather than floating on nothing. */
+  --shadow-groove: inset 0 1px 2px 0 rgb(16 35 27 / 0.10);
+
+  /* ── Type scale by ROLE. text-h2 is the level that did not exist. ── */
+  /* The page's one hero figure — the overrun. It earns a size no other number
+     gets because it is the only measured (non-predicted) finding on the page. */
+  --text-display: 2.5rem;
+  --text-display--line-height: 2.5rem;
+  --text-display--font-weight: 600;
+
+  --text-metric: 1.75rem;
+  --text-metric--line-height: 2rem;
+  --text-metric--font-weight: 600;
+
+  --text-h1: 1.5rem;
+  --text-h1--line-height: 2rem;
+  --text-h1--font-weight: 600;
+
+  --text-h2: 1.125rem;
+  --text-h2--line-height: 1.625rem;
+  --text-h2--font-weight: 600;
+
+  --text-h3: 0.9375rem;
+  --text-h3--line-height: 1.375rem;
+  --text-h3--font-weight: 600;
+
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.375rem;
+
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
 }
 
+/* The canvas. A wide green wash bleeds from the top so the ground has a light
+   source rather than being one dead tone; it sits over a near-black green base.
+   Centred at 50% so it is direction-agnostic — it cannot flip when the locale
+   toggles ar/rtl <-> en/ltr. `fixed` anchors it to the VIEWPORT, so a long page
+   cannot re-run the whole ramp inside the first screenful and band.
+   This is the one place accent green is usable at full chroma: nothing sits on
+   it but panels with their own opaque surfaces, so the 2.99 problem never
+   arises. */
 body {
-  background: var(--background);
+  background-image:
+    radial-gradient(1200px 640px at 50% -6%, rgb(26 161 101 / 0.05) 0%, rgb(26 161 101 / 0) 70%),
+    linear-gradient(180deg, var(--canvas-from) 0%, var(--canvas-to) 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--foreground);
 }
+
+/* Arabic (Noto Kufi) is cursive-joining: letter-spacing visually breaks the
+   joins. NEVER apply tracking-* to Arabic text. Tracking is reserved for
+   JetBrains Mono numerals only. This rule is a guardrail, not decoration. */
+:where(html[lang="ar"]) * {
+  letter-spacing: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* KILLED: --color-mwan-green-light (#e8f5eb) — dead, and the mint token replaces
+   the role it was invented for.
+   REVIVED, not killed: --color-risk-low and --color-info. Both were dead, but the
+   ramp specifies LOW and INFO levels. They are now correctly valued and actually
+   referenced (RiskBadge LOW uses risk-low). Deleting a token the ramp requires,
+   only to re-add it under a new name, is churn. */

@@ -3,6 +3,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useInspections } from "@/hooks/useInspections";
 import { RiskBadge } from "@/components/shared/RiskBadge";
+import { CardFlush } from "@/components/ui/Card";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { Table, Thead, Th, Tbody, Tr, Td, TdEmpty } from "@/components/ui/Table";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 export function InspectionQueue() {
@@ -15,7 +19,7 @@ export function InspectionQueue() {
     { value: "SCHEDULED", label: t("inspections.filterScheduled") },
     { value: "COMPLETED", label: t("inspections.filterCompleted") },
     { value: "", label: t("common.all") },
-  ];
+  ] as const;
 
   const STATUS_LABELS: Record<string, string> = {
     SCHEDULED: t("inspections.statusScheduled"),
@@ -25,74 +29,79 @@ export function InspectionQueue() {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      <div className="flex gap-1 p-4 border-b border-gray-100">
-        {STATUS_FILTERS.map((f) => (
-          <button
-            key={f.value}
-            onClick={() => setStatus(f.value)}
-            className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
-              status === f.value
-                ? "bg-mwan-green/10 text-mwan-green border-mwan-green/20"
-                : "border-gray-200 text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
+    <CardFlush>
+      <div className="flex gap-1 p-4 border-b border-border">
+        <SegmentedControl name="status" value={status} onChange={setStatus} options={STATUS_FILTERS} />
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr className="text-mwan-charcoal text-xs uppercase tracking-wide">
-              <th className="text-start px-4 py-3 font-medium">{t("inspections.company")}</th>
-              <th className="text-start px-4 py-3 font-medium">{t("inspections.scheduledDate")}</th>
-              <th className="text-start px-4 py-3 font-medium">{t("inspections.inspector")}</th>
-              <th className="text-start px-4 py-3 font-medium">{t("inspections.status")}</th>
-              <th className="text-start px-4 py-3 font-medium">{t("inspections.score")}</th>
-              <th className="text-start px-4 py-3 font-medium">{t("inspections.risk")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
-                  {t("common.loading")}
-                </td>
-              </tr>
-            )}
-            {!isLoading && inspections.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
-                  {t("inspections.noInspections")}
-                </td>
-              </tr>
-            )}
-            {inspections.map((i) => (
-              <tr key={i.id} className="border-t border-gray-100 hover:bg-mwan-green/5">
-                <td className="px-4 py-3">
-                  <Link href={`/inspections/${i.id}`} className="font-medium text-mwan-charcoal hover:text-mwan-green">
-                    {i.companyName}
-                  </Link>
-                  <div className="text-xs text-gray-400 font-mono" dir="ltr">
-                    {i.licenseNumber}
-                  </div>
-                </td>
-                <td className="px-4 py-3 font-mono" dir="ltr">
-                  {new Date(i.scheduledDate).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")}
-                </td>
-                <td className="px-4 py-3">{i.inspectorName ?? "—"}</td>
-                <td className="px-4 py-3">{STATUS_LABELS[i.status]}</td>
-                <td className="px-4 py-3 font-mono" dir="ltr">
-                  {i.overallScore != null ? i.overallScore.toFixed(0) : "—"}
-                </td>
-                <td className="px-4 py-3">{i.riskTier ? <RiskBadge tier={i.riskTier} /> : "—"}</td>
-              </tr>
+      <Table>
+        <Thead>
+          <Th>{t("inspections.company")}</Th>
+          <Th>{t("inspections.scheduledDate")}</Th>
+          <Th>{t("inspections.inspector")}</Th>
+          <Th>{t("inspections.status")}</Th>
+          <Th>{t("inspections.score")}</Th>
+          <Th>{t("inspections.risk")}</Th>
+        </Thead>
+        <Tbody>
+          {/* Skeleton rows mirror the real row geometry — company name + license
+              sub-line, a mono date, a plain name, a status word, a mono score,
+              a badge-shaped chip — so the panel does not jump when data lands. */}
+          {isLoading &&
+            Array.from({ length: 5 }).map((_, i) => (
+              <Tr key={i}>
+                <Td>
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="mt-1.5 h-3 w-20" />
+                </Td>
+                <Td num>
+                  <Skeleton className="h-4 w-16" />
+                </Td>
+                <Td>
+                  <Skeleton className="h-4 w-24" />
+                </Td>
+                <Td>
+                  <Skeleton className="h-4 w-20" />
+                </Td>
+                <Td num>
+                  <Skeleton className="h-4 w-8" />
+                </Td>
+                <Td>
+                  <Skeleton className="h-5 w-14 rounded-control" />
+                </Td>
+              </Tr>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+
+          {!isLoading && inspections.length === 0 && (
+            <TdEmpty colSpan={6}>{t("inspections.noInspections")}</TdEmpty>
+          )}
+
+          {!isLoading &&
+            inspections.map((i) => (
+              <Tr key={i.id}>
+                <Td>
+                  <Link href={`/inspections/${i.id}`} className="font-medium text-ink hover:text-forest">
+                    {/* <bdi> isolates the company name: it is Arabic DATA that
+                        renders inside a possibly-English UI, and without
+                        isolation the bidi algorithm lets it reorder against the
+                        surrounding run. */}
+                    <bdi>{i.companyName}</bdi>
+                  </Link>
+                  <div className="text-caption text-ink-muted">
+                    <span dir="ltr" className="font-mono tabular-nums">
+                      {i.licenseNumber}
+                    </span>
+                  </div>
+                </Td>
+                <Td num>{new Date(i.scheduledDate).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")}</Td>
+                <Td>{i.inspectorName ?? "—"}</Td>
+                <Td>{STATUS_LABELS[i.status]}</Td>
+                <Td num>{i.overallScore != null ? i.overallScore.toFixed(0) : "—"}</Td>
+                <Td>{i.riskTier ? <RiskBadge tier={i.riskTier} /> : "—"}</Td>
+              </Tr>
+            ))}
+        </Tbody>
+      </Table>
+    </CardFlush>
   );
 }

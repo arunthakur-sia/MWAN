@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const STEPS: { key: string; labelKey: string; path: string }[] = [
@@ -10,6 +11,13 @@ const STEPS: { key: string; labelKey: string; path: string }[] = [
   { key: "networks", labelKey: "dashboard.runNetworks", path: "/api/networks/detect" },
 ];
 
+/**
+ * DEMOTED TO SECONDARY. Three filled buttons shouting from the top-right was the
+ * loudest thing on a page whose loudest thing should be the gap. These are
+ * maintenance actions — a regulator runs them occasionally; they are not the
+ * job. Demoting them costs nothing and buys the entire boldness budget for the
+ * signature.
+ */
 export function RunPipelineButtons() {
   const [loading, setLoading] = useState<string | null>(null);
   const router = useRouter();
@@ -28,15 +36,14 @@ export function RunPipelineButtons() {
   return (
     <div className="flex flex-wrap gap-2">
       {STEPS.map((step) => (
-        <button
-          key={step.key}
-          onClick={() => run(step)}
-          disabled={loading !== null}
-          className="inline-flex items-center gap-2 rounded-lg bg-mwan-green px-4 py-2 text-sm font-medium text-white hover:bg-mwan-green-hover disabled:opacity-50 transition-colors"
-        >
-          <RefreshCw size={14} className={loading === step.key ? "animate-spin" : ""} />
+        /* `canvas`, not `secondary`: on the dark ground a white-filled chip is
+           the LOUDEST thing available and would silently re-promote these
+           maintenance actions back to primary — which is exactly what demoting
+           them was meant to prevent. Mint on a translucent lift keeps them quiet. */
+        <Button key={step.key} variant="canvas" onClick={() => run(step)} disabled={loading !== null}>
+          <RefreshCw size={14} className={loading === step.key ? "animate-spin motion-reduce:animate-none" : ""} />
           {t(step.labelKey)}
-        </button>
+        </Button>
       ))}
     </div>
   );

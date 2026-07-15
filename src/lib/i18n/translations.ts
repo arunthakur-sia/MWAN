@@ -37,11 +37,35 @@ export const translations = {
       networksDetected: "شبكات ملكية مكتشفة",
       unreadAlerts: "تنبيهات غير مقروءة",
       riskDistribution: "توزيع مستوى المخاطر",
+      riskScored: "ناقل مُقيَّم",
+      riskCentre: "ناقل مُقيَّم",
       recentAlerts: "أحدث التنبيهات",
+      alertsUnread: "غير مقروء",
       noUnreadAlerts: "لا توجد تنبيهات غير مقروءة",
       runFleetGap: "تشغيل كشف الفجوة",
       runPrediction: "تشغيل التنبؤ",
       runNetworks: "كشف الشبكات",
+      // t() has NO interpolation, so no key may carry a {count} placeholder —
+      // every number is composed as a sibling JSX node.
+      fleetGapTitle: "فجوة الأسطول",
+      fleetGapCarriers: "ناقلًا لديه فجوة",
+      fleetGapOverrun: "مركبة تتجاوز المعلن",
+      /* Legend label for the amber run. Shorter than fleetGapOverrun, which is a
+         full sentence fragment ("مركبة تتجاوز المعلن") and reads as noise in a key. */
+      fleetGapBeyond: "تتجاوز المعلن",
+      fleetGapNone: "لا توجد فجوة",
+      fleetGapEmpty: "لا توجد بيانات أسطول",
+      modelDisclaimer: "تنبؤات النموذج، وليست نتائج تفتيش",
+      coldStartTitle: "النموذج في مرحلة البداية الباردة، الدرجات أداة لترتيب الأولويات وليست حكمًا",
+      coldStartBody:
+        "تعتمد التنبؤات حاليًا على مجموعة التدريب الاصطناعية (من نقل/الهيئة العامة للنقل ووزارة التجارة فقط). كل درجة أدناه ترتّب من يجب تفتيشه أولًا؛ ويبقى التفتيش البشري هو ما يؤكد كل حالة أو يبرّئها. يبدأ التعلّم من الواقع بمجرد تسجيل 50 نتيجة تفتيش.",
+      coldStartOutcomes: "نتيجة مؤكدة",
+      // The >= 50 state. Same caveat — the ACTIVE model is still the synthetic
+      // bootstrap — but the last sentence must not claim we are waiting for a
+      // threshold that has already been passed.
+      coldStartBodyMet:
+        "تعتمد التنبؤات حاليًا على مجموعة التدريب الاصطناعية (من نقل/الهيئة العامة للنقل ووزارة التجارة فقط). كل درجة أدناه ترتّب من يجب تفتيشه أولًا؛ ويبقى التفتيش البشري هو ما يؤكد كل حالة أو يبرّئها. تم بلوغ حد الـ 50 نتيجة، والنموذج النشط لم يُدرَّب بعد على هذه النتائج.",
+      coldStartOutcomesMet: "نتيجة مؤكدة — إعادة التدريب متاحة",
     },
     carriers: {
       title: "الناقلون",
@@ -160,6 +184,7 @@ export const translations = {
       versionHistory: "سجل إصدارات النموذج",
       version: "الإصدار",
       trainedAt: "تاريخ التدريب",
+      active: "نشط",
     },
   },
   en: {
@@ -197,12 +222,34 @@ export const translations = {
       pendingInspections: "Pending Inspections",
       networksDetected: "Networks Detected",
       unreadAlerts: "Unread Alerts",
-      riskDistribution: "Risk Level Distribution",
-      recentAlerts: "Recent Alerts",
+      riskDistribution: "Risk distribution",
+      riskScored: "carriers scored",
+      riskCentre: "carriers scored",
+      recentAlerts: "Recent alerts",
+      alertsUnread: "unread",
       noUnreadAlerts: "No unread alerts",
       runFleetGap: "Run Fleet Gap Detection",
       runPrediction: "Run Prediction",
       runNetworks: "Detect Networks",
+      // t() has NO interpolation, so no key may carry a {count} placeholder —
+      // every number is composed as a sibling JSX node.
+      fleetGapTitle: "Fleet gap",
+      fleetGapCarriers: "carriers flagged",
+      fleetGapOverrun: "vehicles beyond declared",
+      fleetGapBeyond: "Beyond declared",
+      fleetGapNone: "No gap",
+      fleetGapEmpty: "No fleet data",
+      modelDisclaimer: "Model predictions, not inspection findings",
+      coldStartTitle: "Model is in cold-start, scores are a prioritization aid, not a verdict",
+      coldStartBody:
+        "Predictions currently rely on the synthetic training set (only from NAQL/TGA & MOC). Every score below ranks who to inspect first; a human inspection still confirms or clears each case. Real-world learning begins once 50 inspection outcomes are logged.",
+      coldStartOutcomes: "confirmed outcomes",
+      // The >= 50 state. Same caveat — the ACTIVE model is still the synthetic
+      // bootstrap — but the last sentence must not claim we are waiting for a
+      // threshold that has already been passed.
+      coldStartBodyMet:
+        "Predictions currently rely on the synthetic training set (only from NAQL/TGA & MOC). Every score below ranks who to inspect first; a human inspection still confirms or clears each case. The 50-outcome threshold has been reached — the active model has not yet been retrained on them.",
+      coldStartOutcomesMet: "confirmed outcomes — retrain available",
     },
     carriers: {
       title: "Carriers",
@@ -321,6 +368,7 @@ export const translations = {
       versionHistory: "Model Version History",
       version: "Version",
       trainedAt: "Trained At",
+      active: "Active",
     },
   },
 } as const;

@@ -2,6 +2,10 @@
 import Link from "next/link";
 import { NetworkGraph } from "@/components/networks/NetworkGraph";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { PageHeader, BackLink } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { CardHeader } from "@/components/ui/CardHeader";
+import { StatCard } from "@/components/shared/StatCard";
 
 export interface NetworkDetailData {
   id: string;
@@ -20,61 +24,54 @@ export function NetworkDetailView({ data }: { data: NetworkDetailData }) {
   const { t } = useLocale();
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Link href="/networks" className="text-sm text-mwan-green hover:underline">
-          ← {t("networkDetail.back")}
-        </Link>
-        <h1 className="text-2xl font-semibold text-mwan-charcoal mt-1">{data.primaryOwnerName}</h1>
-        <p className="text-sm text-gray-500 mt-1 font-mono" dir="ltr">
-          {data.networkName}
-        </p>
-      </div>
+    <div className="space-y-3">
+      <PageHeader
+        /* <bdi>: an owner's name is Arabic DATA that renders inside an English UI
+           when locale=en, and without isolation the bidi algorithm reorders it
+           against the surrounding run. Possible now that title takes a ReactNode. */
+        title={<bdi>{data.primaryOwnerName}</bdi>}
+        back={
+          <Link href="/networks">
+            <BackLink>{t("networkDetail.back")}</BackLink>
+          </Link>
+        }
+        meta={
+          <bdi>
+            <span dir="ltr" className="font-mono">
+              {data.networkName}
+            </span>
+          </bdi>
+        }
+      />
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <p className="text-xs text-gray-500">{t("networkDetail.companiesCount")}</p>
-          <p className="text-xl font-bold font-mono" dir="ltr">
-            {data.memberCount}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <p className="text-xs text-gray-500">{t("networkDetail.totalDeclared")}</p>
-          <p className="text-xl font-bold font-mono" dir="ltr">
-            {data.totalDeclared}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <p className="text-xs text-gray-500">{t("networkDetail.totalActual")}</p>
-          <p className="text-xl font-bold font-mono" dir="ltr">
-            {data.totalActual}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <p className="text-xs text-gray-500">{t("networkDetail.combinedGap")}</p>
-          <p className={`text-xl font-bold font-mono ${data.combinedGap > 0 ? "text-risk-high" : ""}`} dir="ltr">
-            {data.combinedGap > 0 ? `+${data.combinedGap}` : data.combinedGap}
-          </p>
-        </div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatCard label={t("networkDetail.companiesCount")} value={data.memberCount} />
+        <StatCard label={t("networkDetail.totalDeclared")} value={data.totalDeclared} />
+        <StatCard label={t("networkDetail.totalActual")} value={data.totalActual} />
+        <StatCard
+          label={t("networkDetail.combinedGap")}
+          value={data.combinedGap > 0 ? `+${data.combinedGap.toLocaleString("en-US")}` : data.combinedGap}
+          tone={data.combinedGap > 0 ? "high" : "default"}
+        />
       </div>
 
       <NetworkGraph nodes={data.nodes} links={data.links} />
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h3 className="text-lg font-semibold mb-4">{t("networkDetail.companiesInNetwork")}</h3>
-        <ul className="divide-y divide-gray-100">
+      <Card>
+        <CardHeader title={t("networkDetail.companiesInNetwork")} />
+        <ul className="divide-y divide-border">
           {data.members.map((m) => (
-            <li key={m.id} className="py-3 flex items-center justify-between">
-              <Link href={`/carriers/${m.carrierId}`} className="hover:text-mwan-green">
-                {m.companyName}
+            <li key={m.id} className="flex items-center justify-between py-3">
+              <Link href={`/carriers/${m.carrierId}`} className="text-body text-ink hover:text-forest">
+                <bdi>{m.companyName}</bdi>
               </Link>
-              <span className="text-sm text-gray-500 font-mono" dir="ltr">
-                {m.declaredFleetSize} {t("networkDetail.declaredVehiclesSuffix")}
+              <span dir="ltr" className="font-mono text-caption tabular-nums text-ink-muted">
+                {m.declaredFleetSize.toLocaleString("en-US")} {t("networkDetail.declaredVehiclesSuffix")}
               </span>
             </li>
           ))}
         </ul>
-      </div>
+      </Card>
     </div>
   );
 }
