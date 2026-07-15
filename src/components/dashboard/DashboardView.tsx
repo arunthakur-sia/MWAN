@@ -10,11 +10,10 @@ export interface DashboardStats {
   totalCarriers: number;
   riskCounts: { HIGH: number; MEDIUM: number; LOW: number };
   unreadAlerts: number;
-  pendingInspections: number;
+  scheduledInspections: number;
   networksDetected: number;
   carriersWithGap: number;
-  inspectionsCompleted: number;
-  inspectionsUntilRetrain: number;
+  inspectionsSinceLastPrediction: number;
 }
 
 export function DashboardView({ stats }: { stats: DashboardStats }) {
@@ -39,7 +38,11 @@ export function DashboardView({ stats }: { stats: DashboardStats }) {
           icon={AlertTriangle}
           tone="medium"
         />
-        <StatCard label={t("dashboard.pendingInspections")} value={stats.pendingInspections} icon={ClipboardList} />
+        <StatCard
+          label={t("dashboard.scheduledInspections")}
+          value={stats.scheduledInspections}
+          icon={ClipboardList}
+        />
         <StatCard label={t("dashboard.networksDetected")} value={stats.networksDetected} icon={NetworkIcon} />
         <StatCard
           label={t("dashboard.unreadAlerts")}
@@ -48,15 +51,9 @@ export function DashboardView({ stats }: { stats: DashboardStats }) {
           tone="medium"
         />
         <StatCard
-          label={t("dashboard.inspectionsCompleted")}
-          value={stats.inspectionsCompleted}
+          label={t("dashboard.inspectionsSinceLastPrediction")}
+          value={stats.inspectionsSinceLastPrediction}
           icon={ClipboardList}
-        />
-        <StatCard
-          label={t("dashboard.inspectionsUntilRetrain")}
-          value={stats.inspectionsUntilRetrain}
-          icon={ClipboardList}
-          tone={stats.inspectionsUntilRetrain === 0 ? "high" : "default"}
         />
       </div>
 
