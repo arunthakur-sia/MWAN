@@ -12,6 +12,18 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
  * or the bar measures one thing and the gate enforces another — a progress bar
  * that fills to a line the system does not actually use.
  *
+ * THIS DUPLICATION IS A KNOWN OBJECTION, NOT AN OVERSIGHT. Commit 0057f35
+ * ("Replace retrain-threshold stat with inspections since last prediction run")
+ * deleted an earlier hardcoded RETRAIN_THRESHOLD for a correct reason: the
+ * constant is OWNED by ml-service, and a copy in the frontend can drift out of
+ * sync with it. That reasoning still stands. The number is back only because a
+ * progress bar cannot draw a target it does not know, and the mitigation is that
+ * the drift is no longer silent — the two constants are diffed mechanically by
+ * the repo's design validator, so divergence fails a check instead of quietly
+ * mis-measuring. The proper fix is for ml-service to expose the threshold over
+ * its API (/retrain already returns `samples` but not the bar it is judged
+ * against); when it does, delete this constant and read it from there.
+ *
  * WHY THERE ARE TWO STATES, and why this is not gold-plating: the banner as
  * specced counts UP to 50 and says "real-world learning begins once 50 outcomes
  * are logged". Against the live registry that sentence is already false — there

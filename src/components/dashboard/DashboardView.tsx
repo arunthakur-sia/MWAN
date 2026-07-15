@@ -12,12 +12,13 @@ export interface DashboardStats {
   totalCarriers: number;
   riskCounts: { HIGH: number; MEDIUM: number; LOW: number };
   unreadAlerts: number;
-  pendingInspections: number;
+  scheduledInspections: number;
   networksDetected: number;
   carriersWithGap: number;
   declaredFleet: number;
   actualFleet: number;
   confirmedOutcomes: number;
+  inspectionsSinceLastPrediction: number;
 }
 
 /**
@@ -63,12 +64,28 @@ export function DashboardView({ stats }: { stats: DashboardStats }) {
           Tone: exactly ONE tile is text-risk-high. tone="medium" is gone from
           unreadAlerts — an unread alert is not a medium-risk finding, it is an
           unread alert. */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      {/* Six tiles, not origin/main's seven. fleetGapDetected is REMOVED:
+          carriersWithGap is not a peer of these counts — it is the gap's own
+          scope, and it now lives inside FleetGapCard as its caption. Rendering
+          it twice would state the page's central finding as a throwaway tile
+          next to "networks detected".
+          inspectionsSinceLastPrediction is KEPT — it is the merge's real
+          addition, and it is the one tile here that is about the MODEL rather
+          than the registry, which is why it sits last, nearest the ring.
+          Tone: exactly ONE tile is text-risk-high. origin/main had tone="medium"
+          on unreadAlerts and fleetGapDetected; an unread alert is not a
+          medium-risk finding, it is an unread alert. The icon props are gone
+          with StatCard's icon chip. */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <StatCard label={t("dashboard.totalCarriers")} value={stats.totalCarriers} />
         <StatCard label={t("dashboard.highRisk")} value={stats.riskCounts.HIGH} tone="high" />
-        <StatCard label={t("dashboard.pendingInspections")} value={stats.pendingInspections} />
+        <StatCard label={t("dashboard.scheduledInspections")} value={stats.scheduledInspections} />
         <StatCard label={t("dashboard.networksDetected")} value={stats.networksDetected} />
         <StatCard label={t("dashboard.unreadAlerts")} value={stats.unreadAlerts} />
+        <StatCard
+          label={t("dashboard.inspectionsSinceLastPrediction")}
+          value={stats.inspectionsSinceLastPrediction}
+        />
       </div>
 
       {/* items-start: the default `stretch` forced the risk card to match
