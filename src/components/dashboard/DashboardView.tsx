@@ -13,6 +13,8 @@ export interface DashboardStats {
   pendingInspections: number;
   networksDetected: number;
   carriersWithGap: number;
+  inspectionsCompleted: number;
+  inspectionsUntilRetrain: number;
 }
 
 export function DashboardView({ stats }: { stats: DashboardStats }) {
@@ -44,6 +46,17 @@ export function DashboardView({ stats }: { stats: DashboardStats }) {
           value={stats.unreadAlerts}
           icon={AlertTriangle}
           tone="medium"
+        />
+        <StatCard
+          label={t("dashboard.inspectionsCompleted")}
+          value={stats.inspectionsCompleted}
+          icon={ClipboardList}
+        />
+        <StatCard
+          label={t("dashboard.inspectionsUntilRetrain")}
+          value={stats.inspectionsUntilRetrain}
+          icon={ClipboardList}
+          tone={stats.inspectionsUntilRetrain === 0 ? "high" : "default"}
         />
       </div>
 
