@@ -100,10 +100,33 @@ export function Sidebar() {
             plate would dissolve the wordmark and the bilingual lockup into the
             shell. h-32 -> h-24: a 128px white slab was the single heaviest
             element in the shell and it was carrying a logo.
+
+            THE LOGO IS HEIGHT-CONSTRAINED, NOT WIDTH-CONSTRAINED, so growing it
+            costs plate height and nothing else. mwan.png is 613x407 (1.506);
+            object-contain fits it to the SHORTER axis, and the content box is far
+            wider than tall, so the render is pinned to the box height and the
+            width falls out of the ratio. At h-28/py-0 the canvas is the full 112
+            tall and ~169 wide inside a 232-wide box — ~63px of inline slack still
+            unspent. Do not widen the aside to make the logo bigger; it would do
+            nothing. The 16px the plate regains over h-24 is bought back by
+            zeroing py rather than by returning to h-32, which keeps the slab well
+            under its original mass.
+
+            py-0 IS DELIBERATE, NOT AN OVERSIGHT — THE ASSET IS SELF-PADDED. The
+            visible ink spans (86,38)-(524,385) of the 613x407 canvas, i.e. the
+            file carries ~9% transparent margin above the mark and ~5% below, so
+            CSS padding is ADDITIVE to margin the logo already has and p-3 was
+            double-padding it. With py-0 the rendered gap above the ink is still
+            ~10px and below ~6px, entirely from the asset. px-3 is retained only
+            as a guard: it is inert while height is the limiting axis (it is, by
+            63px) and would bite first if the asset were ever swapped for a wider
+            one. Measure the alpha bbox before "restoring" py here; the canvas is
+            not the mark, and a squarer asset would need this revisited.
+
             `preload` is correct for Next 16; `priority` is the deprecated
             spelling (docs: v16.0.0 "preload prop added, priority deprecated"). */}
-        <div className="relative w-full h-24 bg-white">
-          <Image src="/mwan.png" alt={t("appName")} fill sizes="256px" className="object-contain p-3" preload />
+        <div className="relative w-full h-28 bg-white">
+          <Image src="/mwan.png" alt={t("appName")} fill sizes="256px" className="object-contain px-3 py-0" preload />
         </div>
         <div className="flex items-center justify-between px-6 py-3">
           <p className="text-caption text-mint/80">{t("tagline")}</p>
