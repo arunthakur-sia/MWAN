@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { RISK_TIER_ORDER } from "@/lib/utils/constants";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -12,11 +13,16 @@ export async function GET(req: NextRequest) {
     },
     include: { carrier: { select: { companyName: true, licenseNumber: true } } },
     orderBy: { createdAt: "desc" },
-    take: 100,
+  });
+
+  alerts.sort((a, b) => {
+    const severityDiff = RISK_TIER_ORDER[a.severity] - RISK_TIER_ORDER[b.severity];
+    if (severityDiff !== 0) return severityDiff;
+    return b.createdAt.getTime() - a.createdAt.getTime();
   });
 
   return NextResponse.json({
-    alerts: alerts.map((a) => ({
+    alerts: alerts.slice(0, 100).map((a) => ({
       id: a.id,
       carrierId: a.carrierId,
       companyName: a.carrier.companyName,

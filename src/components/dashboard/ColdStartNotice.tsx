@@ -8,9 +8,12 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
  * THE THRESHOLD IS NOT A MAGIC NUMBER. 50 mirrors ml-service/app.py:324, which
  * refuses to retrain below it:
  *   SELECT COUNT(*) FROM "Inspection" WHERE status='COMPLETED' AND outcome IS NOT NULL
- * The count fed to this component MUST be that same query (see src/app/page.tsx),
- * or the bar measures one thing and the gate enforces another — a progress bar
- * that fills to a line the system does not actually use.
+ * That query is a LIFETIME count, but the count fed to this component is
+ * inspectionsSinceLastPrediction (src/app/page.tsx) — outcomes logged AFTER the
+ * active model was last trained. The bar is deliberately narrower than the raw
+ * gate: 58 lifetime outcomes already clears 50, but only 2 of them are new
+ * since the model in production was trained, so counting lifetime would tell
+ * carriers "ready to retrain" on data the model has already seen.
  *
  * THIS DUPLICATION IS A KNOWN OBJECTION, NOT AN OVERSIGHT. Commit 0057f35
  * ("Replace retrain-threshold stat with inspections since last prediction run")
@@ -24,16 +27,12 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
  * its API (/retrain already returns `samples` but not the bar it is judged
  * against); when it does, delete this constant and read it from there.
  *
- * WHY THERE ARE TWO STATES, and why this is not gold-plating: the banner as
- * specced counts UP to 50 and says "real-world learning begins once 50 outcomes
- * are logged". Against the live registry that sentence is already false — there
- * are 58. Shipping the single cold-start state would have hardcoded a claim the
- * database contradicts. So the component reads the real count and says the true
- * thing in either world:
- *   confirmed <  50  ->  progress toward the gate ("12 / 50")
- *   confirmed >= 50  ->  the gate is MET and the active model still predates it
- * The second state is the one that renders today, and it is the more urgent
- * message: the outcomes exist, nobody has retrained on them.
+ * ONLY ONE STATE, DELIBERATELY. An earlier version added a >= 50 "gate met,
+ * retrain available" state once the count passed the threshold, back when
+ * that count was lifetime inspectionsSinceLastPrediction (58). Rebasing onto
+ * inspectionsSinceLastPrediction fixes the same problem more directly — the
+ * bar itself no longer clears early — so the second state had nothing left
+ * to trigger it and is removed rather than kept dead.
  *
  * COLOUR. --surface-notice, NOT --risk-medium-tint. Reusing the RiskBadge chip
  * tint here was wrong and read as "too bright yellow": that value is tuned for a
@@ -52,10 +51,9 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
  */
 const RETRAIN_THRESHOLD = 50;
 
-export function ColdStartNotice({ confirmedOutcomes }: { confirmedOutcomes: number }) {
+export function ColdStartNotice({ inspectionsSinceLastPrediction }: { inspectionsSinceLastPrediction: number }) {
   const { t } = useLocale();
-  const met = confirmedOutcomes >= RETRAIN_THRESHOLD;
-  const pct = Math.min(100, (confirmedOutcomes / RETRAIN_THRESHOLD) * 100);
+  const pct = Math.min(100, (inspectionsSinceLastPrediction / RETRAIN_THRESHOLD) * 100);
 
   return (
     <section
@@ -85,10 +83,12 @@ export function ColdStartNotice({ confirmedOutcomes }: { confirmedOutcomes: numb
           <h2 id="cold-start-title" className="text-h2 text-ink">
             {t("dashboard.coldStartTitle")}
           </h2>
-          {/* max-w-prose: this is the longest prose on the page, and a measure
-              that runs the full card width is unreadable at this size. */}
-          <p className="mt-1 max-w-prose text-body text-ink-muted">
-            {met ? t("dashboard.coldStartBodyMet") : t("dashboard.coldStartBody")}
+          {/* max-w-3xl, not max-w-prose: at this card's width, a 65ch measure
+              wrapped this sentence to four short lines with the right half of
+              the card empty. Two lines that use the space that is actually
+              there reads as considered; four narrow ones read as unfinished. */}
+          <p className="mt-1 max-w-5xl text-body text-ink-muted">
+            {t("dashboard.coldStartBody")}
           </p>
 
           {/* The counter. Not decoration — it is the one number that says how
@@ -101,7 +101,7 @@ export function ColdStartNotice({ confirmedOutcomes }: { confirmedOutcomes: numb
             <div
               className="h-1.5 w-56 max-w-full overflow-hidden rounded-control bg-risk-medium/15 shadow-groove"
               role="progressbar"
-              aria-valuenow={Math.min(confirmedOutcomes, RETRAIN_THRESHOLD)}
+              aria-valuenow={Math.min(inspectionsSinceLastPrediction, RETRAIN_THRESHOLD)}
               aria-valuemin={0}
               aria-valuemax={RETRAIN_THRESHOLD}
               aria-labelledby="cold-start-title"
@@ -117,11 +117,9 @@ export function ColdStartNotice({ confirmedOutcomes }: { confirmedOutcomes: numb
             </div>
             <p className="text-caption font-semibold text-risk-medium">
               <span dir="ltr" className="font-mono tabular-nums">
-                {met
-                  ? confirmedOutcomes.toLocaleString("en-US")
-                  : `${confirmedOutcomes.toLocaleString("en-US")} / ${RETRAIN_THRESHOLD}`}
+                {`${inspectionsSinceLastPrediction.toLocaleString("en-US")} / ${RETRAIN_THRESHOLD}`}
               </span>{" "}
-              {met ? t("dashboard.coldStartOutcomesMet") : t("dashboard.coldStartOutcomes")}
+              {t("dashboard.coldStartOutcomes")}
             </p>
           </div>
         </div>

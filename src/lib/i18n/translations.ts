@@ -40,6 +40,11 @@ export const translations = {
       riskDistribution: "توزيع مستوى المخاطر",
       riskScored: "ناقل مُقيَّم",
       riskCentre: "ناقل مُقيَّم",
+      riskUnscored: "لم يُقيَّم بعد",
+      licenseStatusActive: "نشط",
+      licenseStatusExpired: "منتهي الصلاحية",
+      licenseStatusSuspended: "مُعلَّق",
+      licenseStatusRevoked: "مُلغى",
       recentAlerts: "أحدث التنبيهات",
       alertsUnread: "غير مقروء",
       noUnreadAlerts: "لا توجد تنبيهات غير مقروءة",
@@ -61,12 +66,6 @@ export const translations = {
       coldStartBody:
         "تعتمد التنبؤات حاليًا على مجموعة التدريب الاصطناعية (من نقل/الهيئة العامة للنقل ووزارة التجارة فقط). كل درجة أدناه ترتّب من يجب تفتيشه أولًا؛ ويبقى التفتيش البشري هو ما يؤكد كل حالة أو يبرّئها. يبدأ التعلّم من الواقع بمجرد تسجيل 50 نتيجة تفتيش.",
       coldStartOutcomes: "نتيجة مؤكدة",
-      // The >= 50 state. Same caveat — the ACTIVE model is still the synthetic
-      // bootstrap — but the last sentence must not claim we are waiting for a
-      // threshold that has already been passed.
-      coldStartBodyMet:
-        "تعتمد التنبؤات حاليًا على مجموعة التدريب الاصطناعية (من نقل/الهيئة العامة للنقل ووزارة التجارة فقط). كل درجة أدناه ترتّب من يجب تفتيشه أولًا؛ ويبقى التفتيش البشري هو ما يؤكد كل حالة أو يبرّئها. تم بلوغ حد الـ 50 نتيجة، والنموذج النشط لم يُدرَّب بعد على هذه النتائج.",
-      coldStartOutcomesMet: "نتيجة مؤكدة — إعادة التدريب متاحة",
     },
     carriers: {
       title: "الناقلون",
@@ -227,6 +226,11 @@ export const translations = {
       riskDistribution: "Risk distribution",
       riskScored: "carriers scored",
       riskCentre: "carriers scored",
+      riskUnscored: "not yet scored",
+      licenseStatusActive: "active",
+      licenseStatusExpired: "expired",
+      licenseStatusSuspended: "suspended",
+      licenseStatusRevoked: "revoked",
       recentAlerts: "Recent alerts",
       alertsUnread: "unread",
       noUnreadAlerts: "No unread alerts",
@@ -246,12 +250,6 @@ export const translations = {
       coldStartBody:
         "Predictions currently rely on the synthetic training set (only from NAQL/TGA & MOC). Every score below ranks who to inspect first; a human inspection still confirms or clears each case. Real-world learning begins once 50 inspection outcomes are logged.",
       coldStartOutcomes: "confirmed outcomes",
-      // The >= 50 state. Same caveat — the ACTIVE model is still the synthetic
-      // bootstrap — but the last sentence must not claim we are waiting for a
-      // threshold that has already been passed.
-      coldStartBodyMet:
-        "Predictions currently rely on the synthetic training set (only from NAQL/TGA & MOC). Every score below ranks who to inspect first; a human inspection still confirms or clears each case. The 50-outcome threshold has been reached — the active model has not yet been retrained on them.",
-      coldStartOutcomesMet: "confirmed outcomes — retrain available",
     },
     carriers: {
       title: "Carriers",

@@ -48,7 +48,10 @@ async function getStats() {
   ] = await prisma.$transaction([
     prisma.carrier.count(),
     prisma.carrier.findMany({
-      select: { complianceScores: { orderBy: { computedAt: "desc" }, take: 1, select: { riskTier: true } } },
+      select: {
+        licenseStatus: true,
+        complianceScores: { orderBy: { computedAt: "desc" }, take: 1, select: { riskTier: true } },
+      },
     }),
     prisma.alert.count({ where: { isRead: false, isDismissed: false } }),
     prisma.inspection.count({ where: { status: "SCHEDULED" } }),
@@ -58,11 +61,10 @@ async function getStats() {
     // carrier-scoped, mirroring the pipeline's _count.vehicles, so orphan
     // vehicles cannot inflate the gap
     prisma.vehicle.count({ where: { carrier: { isNot: null } } }),
-    // ONE query, two consumers. This landed twice in the merge — as
-    // `confirmedOutcomes` (ColdStartNotice's counter) and as `inspectionsCompleted`
-    // (the fallback for inspectionsSinceLastPrediction) — with byte-identical
-    // where-clauses under two names. It is a deliberate transcription of the
-    // retrain gate at ml-service/app.py:318-324:
+    // `confirmedOutcomes`: the lifetime count, used below only as the fallback
+    // for inspectionsSinceLastPrediction (no prediction run yet -> every
+    // outcome logged so far is "since" it). It is a deliberate transcription
+    // of the retrain gate at ml-service/app.py:318-324:
     //   SELECT COUNT(*) FROM "Inspection"
     //   WHERE status = 'COMPLETED' AND outcome IS NOT NULL
     // Both predicates matter: `outcome IS NOT NULL` is what makes an inspection a
@@ -84,10 +86,17 @@ async function getStats() {
     orderBy: { computedAt: "desc" },
   });
 
+  // Carriers with no ComplianceScore row (never picked up by a prediction run,
+  // per ml-service/app.py's ACTIVE-only feature query) are invisible to
+  // riskCounts. Tallied here by licenseStatus so the dashboard can say WHY the
+  // ring's total falls short of totalCarriers instead of leaving that gap
+  // unexplained.
   const riskCounts = { HIGH: 0, MEDIUM: 0, LOW: 0 };
+  const unscoredByStatus: Record<string, number> = {};
   for (const c of carrierTiers) {
     const tier = c.complianceScores[0]?.riskTier;
     if (tier) riskCounts[tier]++;
+    else unscoredByStatus[c.licenseStatus] = (unscoredByStatus[c.licenseStatus] ?? 0) + 1;
   }
 
   // /api/prediction/run scores every carrier in one batch, so its rows share
@@ -108,6 +117,7 @@ async function getStats() {
   return {
     totalCarriers,
     riskCounts,
+    unscoredByStatus,
     unreadAlerts,
     scheduledInspections,
     networksDetected,
@@ -115,7 +125,6 @@ async function getStats() {
     // _sum returns null on an empty table
     declaredFleet: declaredFleetAgg._sum.declaredFleetSize ?? 0,
     actualFleet,
-    confirmedOutcomes,
     inspectionsSinceLastPrediction,
   };
 }

@@ -24,8 +24,8 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
  * colours come from the token layer as classes — so this cannot drift from the
  * palette the way the old recharts <Cell fill="#469A57"> did.
  */
-const SIZE = 168;
-const THICKNESS = 26;
+const SIZE = 216;
+const THICKNESS = 32;
 const R = (SIZE - THICKNESS) / 2;
 const CIRC = 2 * Math.PI * R;
 
@@ -37,9 +37,26 @@ const TONES: Record<Tier, string> = {
   LOW: "stroke-risk-low/25",
 };
 
-export function RiskDistributionChart({ high, medium, low }: { high: number; medium: number; low: number }) {
+export function RiskDistributionChart({
+  high,
+  medium,
+  low,
+  unscoredByStatus,
+}: {
+  high: number;
+  medium: number;
+  low: number;
+  unscoredByStatus: Record<string, number>;
+}) {
   const { t } = useLocale();
   const total = high + medium + low;
+
+  // Carriers with no ComplianceScore row — never picked up by a prediction
+  // run — are why this total falls short of the registry's total carrier
+  // count. Surfaced here, above the ring, as the reason for that gap rather
+  // than leaving it for someone to notice and go dig for.
+  const unscoredEntries = Object.entries(unscoredByStatus).filter(([, count]) => count > 0);
+  const unscoredTotal = unscoredEntries.reduce((sum, [, count]) => sum + count, 0);
 
   const rows: { tier: Tier; value: number }[] = [
     { tier: "HIGH", value: high },
@@ -69,13 +86,32 @@ export function RiskDistributionChart({ high, medium, low }: { high: number; med
         }
       />
 
+      {unscoredTotal > 0 ? (
+        <p className="pt-3 text-caption text-ink-muted">
+          <span dir="ltr" className="font-mono tabular-nums">
+            {unscoredTotal.toLocaleString("en-US")}
+          </span>{" "}
+          {t("dashboard.riskUnscored")}
+          {" — "}
+          {unscoredEntries.map(([status, count], i) => (
+            <span key={status}>
+              {i > 0 ? ", " : ""}
+              <span dir="ltr" className="font-mono tabular-nums">
+                {count.toLocaleString("en-US")}
+              </span>{" "}
+              {t(`dashboard.licenseStatus${status.charAt(0)}${status.slice(1).toLowerCase()}`)}
+            </span>
+          ))}
+        </p>
+      ) : null}
+
       {total === 0 ? (
         <p className="pt-3 text-body text-ink-muted">{t("dashboard.fleetGapEmpty")}</p>
       ) : (
-        <div className="flex flex-col items-center gap-6 pt-4 sm:flex-row sm:items-center sm:gap-7">
+        <div className="flex flex-col items-center gap-8 pt-6 sm:flex-row sm:items-center sm:gap-10">
           {/* ── The ring ── */}
           <div className="relative shrink-0">
-            <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="size-42" role="img" aria-hidden="true">
+            <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="size-54" role="img" aria-hidden="true">
               {/* rotate -90 starts the first arc at 12 o'clock instead of 3 —
                   the ring is not mirrored under RTL because a proportion is not
                   a direction, and flipping it would imply an order it does not
@@ -120,7 +156,7 @@ export function RiskDistributionChart({ high, medium, low }: { high: number; med
                  starting at a different x. */}
           <ul className="min-w-0 flex-1 divide-y divide-border self-stretch">
             {rows.map((r) => (
-              <li key={r.tier} className="flex items-center justify-between gap-3 py-3">
+              <li key={r.tier} className="flex items-center justify-between gap-3 py-5">
                 <span className="flex w-24 shrink-0 justify-start">
                   <RiskBadge tier={r.tier} />
                 </span>

@@ -9,6 +9,13 @@ export function scoreToRiskTier(score: number): "HIGH" | "MEDIUM" | "LOW" {
   return "LOW";
 }
 
+// Sort weight for surfacing HIGH risk first wherever alerts/carriers are ranked by severity.
+export const RISK_TIER_ORDER: Record<"HIGH" | "MEDIUM" | "LOW", number> = {
+  HIGH: 0,
+  MEDIUM: 1,
+  LOW: 2,
+};
+
 // Composite score weights — blends today's fleet gap, the ML forward-looking
 // prediction, and hidden-ownership network risk (spec section 3.4).
 export const SCORE_WEIGHTS = {

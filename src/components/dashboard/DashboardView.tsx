@@ -11,13 +11,13 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 export interface DashboardStats {
   totalCarriers: number;
   riskCounts: { HIGH: number; MEDIUM: number; LOW: number };
+  unscoredByStatus: Record<string, number>;
   unreadAlerts: number;
   scheduledInspections: number;
   networksDetected: number;
   carriersWithGap: number;
   declaredFleet: number;
   actualFleet: number;
-  confirmedOutcomes: number;
   inspectionsSinceLastPrediction: number;
 }
 
@@ -45,16 +45,6 @@ export function DashboardView({ stats }: { stats: DashboardStats }) {
         actualFleet={stats.actualFleet}
         carriersWithGap={stats.carriersWithGap}
       />
-
-      {/* PLACEMENT IS AN ARGUMENT, not a layout preference. The notice qualifies
-          the MODEL's output, and it sits BELOW FleetGapCard on purpose: the
-          fleet gap is arithmetic over two real registries and is explicitly NOT
-          a prediction (see FleetGapCard's docblock). Putting the caveat above it
-          would attach "this is a model guess" to the one number on the page that
-          is measured — the exact confusion this banner exists to prevent.
-          Below it, everything the copy calls "every score below" — the high-risk
-          tile and the risk ring — really is downstream of the model. */}
-      <ColdStartNotice confirmedOutcomes={stats.confirmedOutcomes} />
 
       {/* Six tiles become five. The fleetGapDetected tile is REMOVED:
           carriersWithGap is not a peer of these counts — it is the gap's own
@@ -88,17 +78,20 @@ export function DashboardView({ stats }: { stats: DashboardStats }) {
         />
       </div>
 
-      {/* items-start: the default `stretch` forced the risk card to match
-          RecentAlerts' height (6 alert rows), leaving a tall empty white void
-          under three short bars. Each card should be as tall as its content. */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <RiskDistributionChart
           high={stats.riskCounts.HIGH}
           medium={stats.riskCounts.MEDIUM}
           low={stats.riskCounts.LOW}
+          unscoredByStatus={stats.unscoredByStatus}
         />
         <RecentAlerts />
       </div>
+
+      {/* Moved below the grid: the notice now qualifies everything above it —
+          the tiles, the risk ring, and the alert list — rather than sitting
+          between FleetGapCard and the tiles. */}
+      <ColdStartNotice inspectionsSinceLastPrediction={stats.inspectionsSinceLastPrediction} />
     </div>
   );
 }
