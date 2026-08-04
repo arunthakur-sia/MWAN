@@ -15,9 +15,12 @@ export interface NetworkListItem {
   members: { id: string; companyName: string }[];
 }
 
-export function useNetworks() {
+export function useNetworks(params: { search?: string } = {}) {
+  const query = new URLSearchParams();
+  if (params.search) query.set("search", params.search);
+
   const { data, error, isLoading, mutate } = useSWR<{ networks: NetworkListItem[] }>(
-    "/api/networks",
+    `/api/networks?${query.toString()}`,
     fetcher,
   );
   return { data, error, isLoading, mutate };

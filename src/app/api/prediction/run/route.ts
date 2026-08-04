@@ -5,6 +5,8 @@ import { runPredictions } from "@/lib/ml/client";
 import { computeCompositeScore, fleetGapToScore, networkToScore } from "@/lib/ml/scoring";
 import type { Prisma } from "@prisma/client";
 
+export const maxDuration = 60;
+
 export async function POST() {
   const { predictions, model_version } = await runPredictions();
 

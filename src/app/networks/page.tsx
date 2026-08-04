@@ -1,21 +1,34 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
-import { Network as NetworkIcon } from "lucide-react";
+import { Network as NetworkIcon, Search } from "lucide-react";
 import { useNetworks } from "@/hooks/useNetworks";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CardInteractive } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Field";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 export default function NetworksPage() {
-  const { data, isLoading } = useNetworks();
+  const [search, setSearch] = useState("");
+  const { data, isLoading } = useNetworks({ search: search || undefined });
   const { t } = useLocale();
   const networks = data?.networks ?? [];
 
   return (
     <div className="space-y-3">
       <PageHeader title={t("networks.title")} subtitle={t("networks.subtitle")} />
+
+      <div className="relative max-w-sm">
+        <Search size={16} className="absolute top-1/2 -translate-y-1/2 start-3 text-ink-muted" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t("networks.searchPlaceholder")}
+          className="ps-9"
+        />
+      </div>
 
       {isLoading && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -29,7 +42,9 @@ export default function NetworksPage() {
         </div>
       )}
 
-      {!isLoading && networks.length === 0 && <EmptyState>{t("networks.noNetworks")}</EmptyState>}
+      {!isLoading && networks.length === 0 && (
+        <EmptyState>{search ? t("common.noResults") : t("networks.noNetworks")}</EmptyState>
+      )}
 
       {!isLoading && networks.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

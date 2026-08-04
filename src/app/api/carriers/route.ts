@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "25");
   const riskTier = searchParams.get("riskTier"); // HIGH, MEDIUM, LOW
+  const licenseStatus = searchParams.get("licenseStatus"); // ACTIVE, SUSPENDED, EXPIRED, REVOKED
   const sortBy = searchParams.get("sortBy") || "overallScore";
   const sortDir = searchParams.get("sortDir") || "desc";
   const search = searchParams.get("search");
@@ -18,6 +19,9 @@ export async function GET(req: NextRequest) {
       { licenseNumber: { contains: search, mode: "insensitive" } },
       { companyId: { contains: search, mode: "insensitive" } },
     ];
+  }
+  if (licenseStatus) {
+    where.licenseStatus = licenseStatus as never;
   }
 
   const carriers = await prisma.carrier.findMany({

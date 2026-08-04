@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { retrainModel } from "@/lib/ml/client";
 
+export const maxDuration = 60;
+
 export async function POST() {
   const result = await retrainModel();
 

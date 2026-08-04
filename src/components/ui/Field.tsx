@@ -52,3 +52,7 @@ export function Input({ className = "", ...props }: React.InputHTMLAttributes<HT
 export function Textarea({ className = "", ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea className={`${INPUT} ${className}`} {...props} />;
 }
+
+export function Select({ className = "", ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return <select className={`${INPUT} cursor-pointer ${className}`} {...props} />;
+}

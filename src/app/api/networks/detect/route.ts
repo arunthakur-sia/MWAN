@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db/prisma";
 import { detectNetworks } from "@/lib/ml/client";
 import type { Prisma } from "@prisma/client";
 
+export const maxDuration = 60;
+
 export async function POST() {
   const { networks } = await detectNetworks();
 

@@ -1,25 +1,44 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { useInspections } from "@/hooks/useInspections";
 import { RiskBadge } from "@/components/shared/RiskBadge";
 import { CardFlush } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Field";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Table, Thead, Th, Tbody, Tr, Td, TdEmpty } from "@/components/ui/Table";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
+type RiskFilter = "" | "HIGH" | "MEDIUM" | "LOW";
+
 export function InspectionQueue() {
+  const [search, setSearch] = useState("");
   const [status, setStatus] = useState("SCHEDULED");
-  const { data, isLoading } = useInspections(status || undefined);
+  const [riskTier, setRiskTier] = useState<RiskFilter>("");
+  const { data, isLoading } = useInspections({
+    status: status || undefined,
+    riskTier: riskTier || undefined,
+    search: search || undefined,
+  });
   const { t, locale } = useLocale();
   const inspections = data?.inspections ?? [];
 
   const STATUS_FILTERS = [
-    { value: "SCHEDULED", label: t("inspections.filterScheduled") },
-    { value: "COMPLETED", label: t("inspections.filterCompleted") },
     { value: "", label: t("common.all") },
+    { value: "SCHEDULED", label: t("inspections.filterScheduled") },
+    { value: "IN_PROGRESS", label: t("inspections.statusInProgress") },
+    { value: "COMPLETED", label: t("inspections.filterCompleted") },
+    { value: "CANCELLED", label: t("inspections.statusCancelled") },
   ] as const;
+
+  const RISK_FILTERS = [
+    { value: "" as RiskFilter, label: t("common.all") },
+    { value: "HIGH" as RiskFilter, label: t("common.riskHigh") },
+    { value: "MEDIUM" as RiskFilter, label: t("common.riskMedium") },
+    { value: "LOW" as RiskFilter, label: t("common.riskLow") },
+  ];
 
   const STATUS_LABELS: Record<string, string> = {
     SCHEDULED: t("inspections.statusScheduled"),
@@ -30,8 +49,18 @@ export function InspectionQueue() {
 
   return (
     <CardFlush>
-      <div className="flex gap-1 p-4 border-b border-border">
+      <div className="flex flex-wrap items-center gap-3 p-4 border-b border-border">
+        <div className="relative flex-1 min-w-[220px]">
+          <Search size={16} className="absolute top-1/2 -translate-y-1/2 start-3 text-ink-muted" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("inspections.searchPlaceholder")}
+            className="ps-9"
+          />
+        </div>
         <SegmentedControl name="status" value={status} onChange={setStatus} options={STATUS_FILTERS} />
+        <SegmentedControl name="risk" value={riskTier} onChange={setRiskTier} options={RISK_FILTERS} />
       </div>
 
       <Table>

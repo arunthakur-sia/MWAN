@@ -5,11 +5,24 @@ import { RISK_TIER_ORDER } from "@/lib/utils/constants";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const unreadOnly = searchParams.get("unreadOnly") === "true";
+  const severity = searchParams.get("severity"); // HIGH, MEDIUM, LOW
+  const search = searchParams.get("search");
 
   const alerts = await prisma.alert.findMany({
     where: {
       isDismissed: false,
       ...(unreadOnly ? { isRead: false } : {}),
+      ...(severity ? { severity: severity as never } : {}),
+      ...(search
+        ? {
+            carrier: {
+              OR: [
+                { companyName: { contains: search, mode: "insensitive" } },
+                { licenseNumber: { contains: search, mode: "insensitive" } },
+              ],
+            },
+          }
+        : {}),
     },
     include: { carrier: { select: { companyName: true, licenseNumber: true } } },
     orderBy: { createdAt: "desc" },

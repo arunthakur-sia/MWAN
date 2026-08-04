@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 import { useCarriers } from "@/hooks/useCarriers";
 import { RiskBadge } from "@/components/shared/RiskBadge";
 import { CardFlush } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Field";
+import { Input, Select } from "@/components/ui/Field";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Table, Thead, Th, Tbody, Tr, Td, TdEmpty } from "@/components/ui/Table";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/Button";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 type RiskFilter = "" | "HIGH" | "MEDIUM" | "LOW";
+type LicenseStatusFilter = "" | "ACTIVE" | "SUSPENDED" | "EXPIRED" | "REVOKED";
 
 export function CarrierTable() {
   const [search, setSearch] = useState("");
   const [riskTier, setRiskTier] = useState<RiskFilter>("");
+  const [licenseStatus, setLicenseStatus] = useState<LicenseStatusFilter>("");
   const [page, setPage] = useState(1);
   const limit = 25;
   const { t } = useLocale();
@@ -28,7 +30,21 @@ export function CarrierTable() {
     { value: "LOW" as RiskFilter, label: t("common.riskLow") },
   ];
 
-  const { data, isLoading } = useCarriers({ page, limit, riskTier: riskTier || undefined, search: search || undefined });
+  const LICENSE_STATUS_FILTERS: { value: LicenseStatusFilter; label: string }[] = [
+    { value: "", label: t("carriers.licenseStatusAll") },
+    { value: "ACTIVE", label: t("carriers.licenseStatusActive") },
+    { value: "SUSPENDED", label: t("carriers.licenseStatusSuspended") },
+    { value: "EXPIRED", label: t("carriers.licenseStatusExpired") },
+    { value: "REVOKED", label: t("carriers.licenseStatusRevoked") },
+  ];
+
+  const { data, isLoading } = useCarriers({
+    page,
+    limit,
+    riskTier: riskTier || undefined,
+    licenseStatus: licenseStatus || undefined,
+    search: search || undefined,
+  });
   const carriers = data?.carriers ?? [];
   const total = data?.total ?? 0;
 
@@ -56,6 +72,21 @@ export function CarrierTable() {
           }}
           options={RISK_FILTERS}
         />
+        <Select
+          aria-label={t("carriers.filterLicenseStatus")}
+          value={licenseStatus}
+          onChange={(e) => {
+            setLicenseStatus(e.target.value as LicenseStatusFilter);
+            setPage(1);
+          }}
+          className="w-auto"
+        >
+          {LICENSE_STATUS_FILTERS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </Select>
       </div>
 
       <Table>

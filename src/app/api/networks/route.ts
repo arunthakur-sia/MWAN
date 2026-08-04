@@ -1,8 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const search = searchParams.get("search");
+
   const networks = await prisma.ownershipNetwork.findMany({
+    where: search
+      ? {
+          OR: [
+            { networkName: { contains: search, mode: "insensitive" } },
+            { primaryOwnerName: { contains: search, mode: "insensitive" } },
+          ],
+        }
+      : undefined,
     orderBy: { combinedGap: "desc" },
     include: {
       members: {

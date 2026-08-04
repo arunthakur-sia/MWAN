@@ -5,9 +5,23 @@ import { prisma } from "@/lib/db/prisma";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status"); // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  const riskTier = searchParams.get("riskTier"); // HIGH, MEDIUM, LOW
+  const search = searchParams.get("search");
 
   const inspections = await prisma.inspection.findMany({
-    where: status ? { status: status as never } : undefined,
+    where: {
+      ...(status ? { status: status as never } : {}),
+      ...(search
+        ? {
+            carrier: {
+              OR: [
+                { companyName: { contains: search, mode: "insensitive" } },
+                { licenseNumber: { contains: search, mode: "insensitive" } },
+              ],
+            },
+          }
+        : {}),
+    },
     include: {
       carrier: {
         include: { complianceScores: { orderBy: { computedAt: "desc" }, take: 1 } },
@@ -15,7 +29,7 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  const queue = inspections
+  let queue = inspections
     .map((i) => ({
       id: i.id,
       carrierId: i.carrierId,
@@ -29,6 +43,10 @@ export async function GET(req: NextRequest) {
       riskTier: i.carrier.complianceScores[0]?.riskTier ?? null,
     }))
     .sort((a, b) => (b.overallScore ?? -1) - (a.overallScore ?? -1));
+
+  if (riskTier) {
+    queue = queue.filter((i) => i.riskTier === riskTier);
+  }
 
   return NextResponse.json({ inspections: queue });
 }

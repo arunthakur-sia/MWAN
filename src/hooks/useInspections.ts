@@ -16,9 +16,14 @@ export interface InspectionQueueItem {
   riskTier: "HIGH" | "MEDIUM" | "LOW" | null;
 }
 
-export function useInspections(status?: string) {
+export function useInspections(params: { status?: string; riskTier?: string; search?: string } = {}) {
+  const query = new URLSearchParams();
+  if (params.status) query.set("status", params.status);
+  if (params.riskTier) query.set("riskTier", params.riskTier);
+  if (params.search) query.set("search", params.search);
+
   const { data, error, isLoading, mutate } = useSWR<{ inspections: InspectionQueueItem[] }>(
-    `/api/inspections${status ? `?status=${status}` : ""}`,
+    `/api/inspections?${query.toString()}`,
     fetcher,
   );
   return { data, error, isLoading, mutate };

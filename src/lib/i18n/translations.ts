@@ -78,6 +78,12 @@ export const translations = {
       gap: "الفجوة",
       score: "الدرجة",
       risk: "المخاطر",
+      filterLicenseStatus: "حالة الترخيص",
+      licenseStatusAll: "كل الحالات",
+      licenseStatusActive: "نشط",
+      licenseStatusSuspended: "مُعلَّق",
+      licenseStatusExpired: "منتهي الصلاحية",
+      licenseStatusRevoked: "مُلغى",
     },
     carrierDetail: {
       back: "الناقلون",
@@ -108,6 +114,7 @@ export const translations = {
     networks: {
       title: "شبكات الملكية",
       subtitle: "تجمعات شركات مرتبطة بملاك أو مديرين أو عناوين مشتركة",
+      searchPlaceholder: "بحث باسم الشبكة أو المالك...",
       noNetworks: "لا توجد شبكات مكتشفة — شغّل كشف الشبكات من لوحة المتابعة.",
       linkedCompanies: "شركات مرتبطة",
       combinedGap: "إجمالي الفجوة",
@@ -128,6 +135,7 @@ export const translations = {
     inspections: {
       title: "التفتيش",
       subtitle: "قائمة التفتيش المرتبة حسب مستوى المخاطر",
+      searchPlaceholder: "بحث بالاسم أو رقم الترخيص...",
       filterScheduled: "مجدولة",
       filterCompleted: "مكتملة",
       company: "الشركة",
@@ -164,6 +172,8 @@ export const translations = {
     alerts: {
       title: "التنبيهات",
       subtitle: "تنبيهات آلية حول فجوات الأسطول والمخاطر",
+      searchPlaceholder: "بحث بالاسم أو رقم الترخيص...",
+      filterUnread: "غير مقروءة",
       noAlerts: "لا توجد تنبيهات",
       markRead: "وضع كمقروء",
     },
@@ -262,6 +272,12 @@ export const translations = {
       gap: "Gap",
       score: "Score",
       risk: "Risk",
+      filterLicenseStatus: "License status",
+      licenseStatusAll: "All statuses",
+      licenseStatusActive: "Active",
+      licenseStatusSuspended: "Suspended",
+      licenseStatusExpired: "Expired",
+      licenseStatusRevoked: "Revoked",
     },
     carrierDetail: {
       back: "Carriers",
@@ -292,6 +308,7 @@ export const translations = {
     networks: {
       title: "Ownership Networks",
       subtitle: "Company clusters linked by shared owners, directors, or addresses",
+      searchPlaceholder: "Search by network or owner name...",
       noNetworks: "No networks detected yet — run network detection from the dashboard.",
       linkedCompanies: "linked companies",
       combinedGap: "Combined Gap",
@@ -312,6 +329,7 @@ export const translations = {
     inspections: {
       title: "Inspections",
       subtitle: "Inspection queue ranked by risk level",
+      searchPlaceholder: "Search by name or license number...",
       filterScheduled: "Scheduled",
       filterCompleted: "Completed",
       company: "Company",
@@ -348,6 +366,8 @@ export const translations = {
     alerts: {
       title: "Alerts",
       subtitle: "Automated alerts on fleet gaps and risk changes",
+      searchPlaceholder: "Search by name or license number...",
+      filterUnread: "Unread",
       noAlerts: "No alerts",
       markRead: "Mark as read",
     },

@@ -26,7 +26,7 @@ import { localizeAlert } from "@/lib/i18n/localizeAlert";
 const BADGE_COL = "flex w-20 shrink-0 justify-start";
 
 export function RecentAlerts() {
-  const { data, isLoading } = useAlerts(true);
+  const { data, isLoading } = useAlerts({ unreadOnly: true });
   const { t, locale } = useLocale();
   const alerts = data?.alerts.slice(0, 6) ?? [];
   const unread = data?.alerts.length ?? 0;

@@ -17,11 +17,14 @@ export interface CarrierListItem {
   score: { overallScore: number; riskTier: "HIGH" | "MEDIUM" | "LOW"; computedAt: string } | null;
 }
 
-export function useCarriers(params: { page?: number; limit?: number; riskTier?: string; search?: string } = {}) {
+export function useCarriers(
+  params: { page?: number; limit?: number; riskTier?: string; licenseStatus?: string; search?: string } = {},
+) {
   const query = new URLSearchParams();
   if (params.page) query.set("page", String(params.page));
   if (params.limit) query.set("limit", String(params.limit));
   if (params.riskTier) query.set("riskTier", params.riskTier);
+  if (params.licenseStatus) query.set("licenseStatus", params.licenseStatus);
   if (params.search) query.set("search", params.search);
 
   const { data, error, isLoading, mutate } = useSWR<{

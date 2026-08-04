@@ -17,15 +17,9 @@ export const dynamic = "force-dynamic";
 // that risk tiers are predictions and not verdicts, would be circular.
 async function getStats() {
   const [
-    totalCarriers,
+    scalarStats,
     carrierTiers,
-    unreadAlerts,
-    scheduledInspections,
-    networksDetected,
-    carriersWithGap,
-    declaredFleetAgg,
     actualFleet,
-    confirmedOutcomes,
     // $transaction([...]) — NOT Promise.all. This is a connection-pool fix, not a
     // transactional-semantics one, and it is deliberately KEPT through this merge:
     // origin/main still had Promise.all because it branched before the fix, and
@@ -45,32 +39,67 @@ async function getStats() {
     // $transaction with an array runs them SEQUENTIALLY on ONE connection: N
     // concurrent -> 1. These are independent reads for a dashboard, so their
     // total latency is what changes, not their meaning.
+    //
+    // That said, sequential still means one network round-trip PER statement,
+    // and DATABASE_URL is a pooler in ap-southeast-2 — every round-trip pays
+    // full cross-region latency, and this is why "/" (and only "/") was slow to
+    // navigate to: 9 statements here + a groupBy + a conditional count below
+    // was ~11 round-trips on every single click. The 7 single-table scalar
+    // reads below don't touch each other or the pool-count invariant above —
+    // they're folded into ONE round-trip via a raw SQL query with subqueries,
+    // still inside this same transaction/connection. carrierTiers (needs
+    // per-carrier rows) and actualFleet (relation-filtered, per the comment
+    // that used to sit on it below) stay as separate Prisma calls.
   ] = await prisma.$transaction([
-    prisma.carrier.count(),
+    prisma.$queryRaw<
+      [
+        {
+          totalCarriers: number;
+          unreadAlerts: number;
+          scheduledInspections: number;
+          networksDetected: number;
+          carriersWithGap: number;
+          declaredFleet: number;
+          confirmedOutcomes: number;
+        },
+      ]
+    >`
+      SELECT
+        (SELECT COUNT(*)::int FROM "Carrier") AS "totalCarriers",
+        (SELECT COUNT(*)::int FROM "Alert" WHERE "is_read" = false AND "is_dismissed" = false) AS "unreadAlerts",
+        (SELECT COUNT(*)::int FROM "Inspection" WHERE "status" = 'SCHEDULED') AS "scheduledInspections",
+        (SELECT COUNT(*)::int FROM "OwnershipNetwork") AS "networksDetected",
+        (SELECT COUNT(*)::int FROM "Alert" WHERE "alert_type" = 'FLEET_GAP_DETECTED' AND "is_dismissed" = false) AS "carriersWithGap",
+        (SELECT COALESCE(SUM("declared_fleet_size"), 0)::int FROM "Carrier") AS "declaredFleet",
+        -- confirmedOutcomes: the lifetime count, used below only as the fallback
+        -- for inspectionsSinceLastPrediction (no prediction run yet -> every
+        -- outcome logged so far is "since" it). It is a deliberate transcription
+        -- of the retrain gate at ml-service/app.py:318-324:
+        --   SELECT COUNT(*) FROM "Inspection"
+        --   WHERE status = 'COMPLETED' AND outcome IS NOT NULL
+        -- Both predicates matter: outcome IS NOT NULL is what makes an inspection a
+        -- usable training row, and status='COMPLETED' is what the service enforces.
+        (SELECT COUNT(*)::int FROM "Inspection" WHERE "status" = 'COMPLETED' AND "outcome" IS NOT NULL) AS "confirmedOutcomes"
+    `,
     prisma.carrier.findMany({
       select: {
         licenseStatus: true,
         complianceScores: { orderBy: { computedAt: "desc" }, take: 1, select: { riskTier: true } },
       },
     }),
-    prisma.alert.count({ where: { isRead: false, isDismissed: false } }),
-    prisma.inspection.count({ where: { status: "SCHEDULED" } }),
-    prisma.ownershipNetwork.count(),
-    prisma.alert.count({ where: { alertType: "FLEET_GAP_DETECTED", isDismissed: false } }),
-    prisma.carrier.aggregate({ _sum: { declaredFleetSize: true } }),
     // carrier-scoped, mirroring the pipeline's _count.vehicles, so orphan
     // vehicles cannot inflate the gap
     prisma.vehicle.count({ where: { carrier: { isNot: null } } }),
-    // `confirmedOutcomes`: the lifetime count, used below only as the fallback
-    // for inspectionsSinceLastPrediction (no prediction run yet -> every
-    // outcome logged so far is "since" it). It is a deliberate transcription
-    // of the retrain gate at ml-service/app.py:318-324:
-    //   SELECT COUNT(*) FROM "Inspection"
-    //   WHERE status = 'COMPLETED' AND outcome IS NOT NULL
-    // Both predicates matter: `outcome IS NOT NULL` is what makes an inspection a
-    // usable training row, and `status='COMPLETED'` is what the service enforces.
-    prisma.inspection.count({ where: { status: "COMPLETED", outcome: { not: null } } }),
   ]);
+  const {
+    totalCarriers,
+    unreadAlerts,
+    scheduledInspections,
+    networksDetected,
+    carriersWithGap,
+    declaredFleet,
+    confirmedOutcomes,
+  } = scalarStats[0];
 
   // groupBy sits OUTSIDE the transaction for a type-system reason, not a
   // correctness one: Prisma's groupBy generic does not survive $transaction's
@@ -122,8 +151,7 @@ async function getStats() {
     scheduledInspections,
     networksDetected,
     carriersWithGap,
-    // _sum returns null on an empty table
-    declaredFleet: declaredFleetAgg._sum.declaredFleetSize ?? 0,
+    declaredFleet,
     actualFleet,
     inspectionsSinceLastPrediction,
   };

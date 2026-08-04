@@ -18,9 +18,14 @@ export interface AlertItem {
   createdAt: string;
 }
 
-export function useAlerts(unreadOnly = false) {
+export function useAlerts(params: { unreadOnly?: boolean; severity?: string; search?: string } = {}) {
+  const query = new URLSearchParams();
+  if (params.unreadOnly) query.set("unreadOnly", "true");
+  if (params.severity) query.set("severity", params.severity);
+  if (params.search) query.set("search", params.search);
+
   const { data, error, isLoading, mutate } = useSWR<{ alerts: AlertItem[] }>(
-    `/api/alerts${unreadOnly ? "?unreadOnly=true" : ""}`,
+    `/api/alerts?${query.toString()}`,
     fetcher,
     { refreshInterval: 30000 },
   );
