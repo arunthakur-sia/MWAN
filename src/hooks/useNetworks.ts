@@ -15,9 +15,10 @@ export interface NetworkListItem {
   members: { id: string; companyName: string }[];
 }
 
-export function useNetworks(params: { search?: string } = {}) {
+export function useNetworks(params: { search?: string; gapStatus?: "under" | "over" | "correct" } = {}) {
   const query = new URLSearchParams();
   if (params.search) query.set("search", params.search);
+  if (params.gapStatus) query.set("gapStatus", params.gapStatus);
 
   const { data, error, isLoading, mutate } = useSWR<{ networks: NetworkListItem[] }>(
     `/api/networks?${query.toString()}`,

@@ -4,16 +4,29 @@ import { prisma } from "@/lib/db/prisma";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const search = searchParams.get("search");
+  const gapStatus = searchParams.get("gapStatus");
+
+  const gapFilter =
+    gapStatus === "under"
+      ? { gt: 0 }
+      : gapStatus === "over"
+        ? { lt: 0 }
+        : gapStatus === "correct"
+          ? { equals: 0 }
+          : undefined;
 
   const networks = await prisma.ownershipNetwork.findMany({
-    where: search
-      ? {
-          OR: [
-            { networkName: { contains: search, mode: "insensitive" } },
-            { primaryOwnerName: { contains: search, mode: "insensitive" } },
-          ],
-        }
-      : undefined,
+    where: {
+      ...(search
+        ? {
+            OR: [
+              { networkName: { contains: search, mode: "insensitive" } },
+              { primaryOwnerName: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+      ...(gapFilter ? { combinedGap: gapFilter } : {}),
+    },
     orderBy: { combinedGap: "desc" },
     include: {
       members: {

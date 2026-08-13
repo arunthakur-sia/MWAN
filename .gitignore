@@ -51,3 +51,6 @@ next-env.d.ts
 # local agent tooling (not part of the app)
 .claude/
 /settings.json
+
+# raw video source (served copies live in public/videos)
+/assets/

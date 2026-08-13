@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Noto_Kufi_Arabic, Inter, JetBrains_Mono } from "next/font/google";
-import { Sidebar } from "@/components/layout/Sidebar";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import "./globals.css";
 
@@ -62,17 +61,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             which is exactly the guarantee this needs. */}
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>
-      {/* p-3 + gap-3 is what makes the shell FLOAT: the canvas is visible around
-          every panel, so the canvas itself becomes the separator and no panel
-          needs a border. min-w-0 on <main> is load-bearing — a flex child
-          defaults to min-width:auto and will refuse to shrink below its content,
-          which lets a wide table blow the layout out horizontally instead of
-          scrolling inside its own container. */}
-      <body className="min-h-screen flex gap-3 p-3 font-arabic">
-        <LocaleProvider>
-          <Sidebar />
-          <main className="flex-1 min-w-0">{children}</main>
-        </LocaleProvider>
+      {/* The sidebar shell (p-3 + gap-3 float, min-w-0 on <main>) now lives in
+          app/(shell)/layout.tsx — it only applies to the authenticated app
+          routes. /login and / (the post-login video landing page) render
+          full-bleed with no sidebar chrome. */}
+      <body className="min-h-screen font-arabic">
+        <LocaleProvider>{children}</LocaleProvider>
       </body>
     </html>
   );

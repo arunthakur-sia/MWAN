@@ -6,7 +6,7 @@ import { LayoutDashboard, Truck, Network, ClipboardCheck, Bell, BarChart3, Langu
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const navItems = [
-  { href: "/", key: "nav.dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", key: "nav.dashboard", icon: LayoutDashboard },
   { href: "/carriers", key: "nav.carriers", icon: Truck },
   { href: "/networks", key: "nav.networks", icon: Network },
   { href: "/inspections", key: "nav.inspections", icon: ClipboardCheck },

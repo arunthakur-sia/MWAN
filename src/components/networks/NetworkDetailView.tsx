@@ -49,8 +49,14 @@ export function NetworkDetailView({ data }: { data: NetworkDetailData }) {
         <StatCard label={t("networkDetail.totalDeclared")} value={data.totalDeclared} />
         <StatCard label={t("networkDetail.totalActual")} value={data.totalActual} />
         <StatCard
-          label={t("networkDetail.combinedGap")}
-          value={data.combinedGap > 0 ? `+${data.combinedGap.toLocaleString("en-US")}` : data.combinedGap}
+          label={
+            data.combinedGap > 0
+              ? t("networkDetail.underdeclared")
+              : data.combinedGap < 0
+                ? t("networkDetail.overdeclared")
+                : t("networkDetail.noGap")
+          }
+          value={`${Math.abs(data.combinedGap).toLocaleString("en-US")} ${Math.abs(data.combinedGap) === 1 ? t("networkDetail.vehicle") : t("networkDetail.vehicles")}`}
           tone={data.combinedGap > 0 ? "high" : "default"}
         />
       </div>
