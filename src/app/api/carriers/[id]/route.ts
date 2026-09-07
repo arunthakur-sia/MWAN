@@ -31,10 +31,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       id: carrier.id,
       licenseNumber: carrier.licenseNumber,
       companyName: carrier.companyName,
+      companyNameEn: carrier.companyNameEn ?? carrier.companyName,
       companyId: carrier.companyId,
       crNumber: carrier.crNumber,
       licenseStatus: carrier.licenseStatus,
       serviceType: carrier.serviceType,
+      serviceTypeEn: carrier.serviceTypeEn ?? carrier.serviceType,
       declaredFleet: carrier.declaredFleetSize,
       actualFleet: carrier._count.vehicles,
       fleetGap: carrier._count.vehicles - carrier.declaredFleetSize,
@@ -44,7 +46,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       email: carrier.email,
       mobile: carrier.mobile,
       city: carrier.city,
+      cityEn: carrier.cityEn ?? carrier.city,
       region: carrier.region,
+      regionEn: carrier.regionEn ?? carrier.region,
     },
     score: latestScore
       ? {
@@ -62,6 +66,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     networks: carrier.networkMembers.map((m) => ({
       id: m.network.id,
       primaryOwnerName: m.network.primaryOwnerName,
+      primaryOwnerNameEn: m.network.primaryOwnerNameEn ?? m.network.primaryOwnerName,
       memberCount: m.network.memberCount,
       combinedGap: m.network.combinedGap,
       role: m.role,
@@ -69,14 +74,22 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     ownership: companyRegistry
       ? {
           legalForm: companyRegistry.legalForm,
+          legalFormEn: companyRegistry.legalFormEn ?? companyRegistry.legalForm,
           registeredAddress: companyRegistry.registeredAddress,
+          registeredAddressEn: companyRegistry.registeredAddressEn ?? companyRegistry.registeredAddress,
           incorporationDate: companyRegistry.incorporationDate,
           shareholders: companyRegistry.shareholders.map((s) => ({
             name: s.name,
+            nameEn: s.nameEn ?? s.name,
             ownershipPct: Number(s.ownershipPct),
             nationalId: s.nationalId,
           })),
-          directors: companyRegistry.directors.map((d) => ({ name: d.name, position: d.position })),
+          directors: companyRegistry.directors.map((d) => ({
+            name: d.name,
+            nameEn: d.nameEn ?? d.name,
+            position: d.position,
+            positionEn: d.positionEn ?? d.position,
+          })),
         }
       : null,
     recentInspections: carrier.inspections,

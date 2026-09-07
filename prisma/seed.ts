@@ -2,6 +2,10 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import * as XLSX from "xlsx";
 import { PrismaClient, Prisma } from "@prisma/client";
+import { backfillEnglishTranslations } from "./backfillEnglishTranslations";
+import { enrichLicenseChangeReasons } from "./enrichLicenseChangeReasons";
+import { fixDeclarationConsistency } from "./fixDeclarationConsistency";
+import { fixReasonDirection } from "./fixReasonDirection";
 
 const prisma = new PrismaClient();
 
@@ -157,6 +161,21 @@ async function main() {
       })),
   });
 
+  // ─── 5b. Recompute change_vs_prior/change_reason from the real fleet deltas ─
+  // (the source columns are independently-random and routinely disagree with
+  // declared_fleet itself), THEN attribute lapsed carriers' latest drop to
+  // their license — order matters, since the fix above can zero out a delta
+  // the enrichment step would otherwise have keyed off of.
+  const fixedCount = await fixDeclarationConsistency(prisma);
+  console.log(`Recomputed change_vs_prior/change_reason for ${fixedCount} declarations`);
+
+  // ─── 5c. Fix reasons whose label direction contradicts the (now-correct) sign
+  const directionFixedCount = await fixReasonDirection(prisma);
+  console.log(`Corrected direction of ${directionFixedCount} change reasons`);
+
+  const lapseReasonCount = await enrichLicenseChangeReasons(prisma);
+  console.log(`Attributed ${lapseReasonCount} declarations to license expiry/suspension`);
+
   // ─── 6. Fee payments ───────────────────────────────────────────────────────
   const feePaymentRows = sheetRows<any>(wb, "LMS_Fee_Payments");
   console.log(`Seeding FeePayment (${feePaymentRows.length})`);
@@ -225,6 +244,10 @@ async function main() {
         riskTier: row["Risk Tier"] ?? null,
       })),
   });
+
+  // ─── 9. English translations for every Arabic field seeded above ──────────
+  const translationCounts = await backfillEnglishTranslations(prisma);
+  console.log("Backfilled English translations:", translationCounts);
 
   const counts = await Promise.all([
     prisma.carrier.count(),

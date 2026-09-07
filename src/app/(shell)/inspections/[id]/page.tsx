@@ -38,6 +38,7 @@ export default async function InspectionDetailPage({ params }: { params: Promise
         carrier: {
           id: carrier.id,
           companyName: carrier.companyName,
+          companyNameEn: carrier.companyNameEn ?? carrier.companyName,
           declaredFleetSize: carrier.declaredFleetSize,
           actualFleet: carrier._count.vehicles,
           riskTier: score?.riskTier ?? null,

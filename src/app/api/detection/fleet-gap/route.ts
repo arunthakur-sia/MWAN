@@ -15,6 +15,7 @@ export async function POST() {
   const results: {
     carrierId: string;
     companyName: string;
+    companyNameEn: string;
     licenseNumber: string;
     declaredFleet: number;
     actualFleet: number;
@@ -44,6 +45,7 @@ export async function POST() {
       results.push({
         carrierId: carrier.id,
         companyName: carrier.companyName,
+        companyNameEn: carrier.companyNameEn ?? carrier.companyName,
         licenseNumber: carrier.licenseNumber,
         declaredFleet,
         actualFleet,
@@ -60,7 +62,7 @@ export async function POST() {
           title: `فجوة أسطول: ${gap} مركبات غير مصرح بها`,
           description: `${carrier.companyName} لديها ${actualFleet} مركبات نشطة مسجلة في هيئة النقل العام، بينما تصرح بـ ${declaredFleet} فقط لدى مركز إدارة النفايات الوطني.`,
           titleEn: `Fleet gap: ${gap} undeclared vehicles`,
-          descriptionEn: `${carrier.companyName} has ${actualFleet} active vehicles registered with the transport authority but declares only ${declaredFleet} to the waste management center.`,
+          descriptionEn: `${carrier.companyNameEn ?? carrier.companyName} has ${actualFleet} active vehicles registered with the transport authority but declares only ${declaredFleet} to the waste management center.`,
         });
       }
     }

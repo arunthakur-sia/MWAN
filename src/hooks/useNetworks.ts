@@ -7,12 +7,14 @@ export interface NetworkListItem {
   id: string;
   networkName: string | null;
   primaryOwnerName: string;
+  primaryOwnerNameEn: string;
   memberCount: number;
   totalDeclared: number;
   totalActual: number;
   combinedGap: number;
   sharedAddress: string | null;
-  members: { id: string; companyName: string }[];
+  sharedAddressEn: string | null;
+  members: { id: string; companyName: string; companyNameEn: string }[];
 }
 
 export function useNetworks(params: { search?: string; gapStatus?: "under" | "over" | "correct" } = {}) {

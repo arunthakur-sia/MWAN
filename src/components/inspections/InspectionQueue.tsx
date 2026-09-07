@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/Field";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Table, Thead, Th, Tbody, Tr, Td, TdEmpty } from "@/components/ui/Table";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { LocalizedDate } from "@/components/shared/LocalizedDate";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { localizeField } from "@/lib/i18n/localizeField";
 
 type RiskFilter = "" | "HIGH" | "MEDIUM" | "LOW";
 
@@ -114,7 +116,7 @@ export function InspectionQueue() {
                         renders inside a possibly-English UI, and without
                         isolation the bidi algorithm lets it reorder against the
                         surrounding run. */}
-                    <bdi>{i.companyName}</bdi>
+                    <bdi>{localizeField(locale, i.companyName, i.companyNameEn)}</bdi>
                   </Link>
                   <div className="text-caption text-ink-muted">
                     <span dir="ltr" className="font-mono tabular-nums">
@@ -122,7 +124,9 @@ export function InspectionQueue() {
                     </span>
                   </div>
                 </Td>
-                <Td num>{new Date(i.scheduledDate).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")}</Td>
+                <Td num>
+                  <LocalizedDate value={i.scheduledDate} locale={locale} />
+                </Td>
                 <Td>{i.inspectorName ?? "—"}</Td>
                 <Td>{STATUS_LABELS[i.status]}</Td>
                 <Td num>{i.overallScore != null ? i.overallScore.toFixed(0) : "—"}</Td>

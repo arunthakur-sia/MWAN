@@ -37,11 +37,18 @@ export default async function CarrierDetailPage({ params }: { params: Promise<{ 
       data={{
         id: carrier.id,
         companyName: carrier.companyName,
+        companyNameEn: carrier.companyNameEn ?? carrier.companyName,
         licenseNumber: carrier.licenseNumber,
         serviceType: carrier.serviceType,
+        serviceTypeEn: carrier.serviceTypeEn ?? carrier.serviceType,
         city: carrier.city,
+        cityEn: carrier.cityEn ?? carrier.city,
         region: carrier.region,
+        regionEn: carrier.regionEn ?? carrier.region,
         licenseStatus: carrier.licenseStatus,
+        issueDate: carrier.issueDate.toISOString(),
+        lastRenewalDate: carrier.lastRenewalDate ? carrier.lastRenewalDate.toISOString() : null,
+        endDate: carrier.endDate.toISOString(),
         declaredFleetSize: carrier.declaredFleetSize,
         actualFleet: carrier._count.vehicles,
         score: score
@@ -57,18 +64,27 @@ export default async function CarrierDetailPage({ params }: { params: Promise<{ 
         registry: registry
           ? {
               legalForm: registry.legalForm,
+              legalFormEn: registry.legalFormEn ?? registry.legalForm,
               shareholders: registry.shareholders.map((s) => ({
                 id: s.id,
                 name: s.name,
+                nameEn: s.nameEn ?? s.name,
                 ownershipPct: Number(s.ownershipPct),
               })),
-              directors: registry.directors.map((d) => ({ id: d.id, name: d.name, position: d.position })),
+              directors: registry.directors.map((d) => ({
+                id: d.id,
+                name: d.name,
+                nameEn: d.nameEn ?? d.name,
+                position: d.position,
+                positionEn: d.positionEn ?? d.position,
+              })),
             }
           : null,
         networkMembers: carrier.networkMembers.map((m) => ({
           id: m.id,
           networkId: m.network.id,
           primaryOwnerName: m.network.primaryOwnerName,
+          primaryOwnerNameEn: m.network.primaryOwnerNameEn ?? m.network.primaryOwnerName,
           memberCount: m.network.memberCount,
         })),
         inspections: carrier.inspections.map((i) => ({

@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
       id: i.id,
       carrierId: i.carrierId,
       companyName: i.carrier.companyName,
+      companyNameEn: i.carrier.companyNameEn ?? i.carrier.companyName,
       licenseNumber: i.carrier.licenseNumber,
       scheduledDate: i.scheduledDate,
       inspectorName: i.inspectorName,

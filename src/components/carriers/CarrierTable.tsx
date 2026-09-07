@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { useCarriers } from "@/hooks/useCarriers";
+import { useCarriers, useCarrierRegions } from "@/hooks/useCarriers";
 import { RiskBadge } from "@/components/shared/RiskBadge";
 import { CardFlush } from "@/components/ui/Card";
 import { Input, Select } from "@/components/ui/Field";
@@ -11,6 +11,7 @@ import { Table, Thead, Th, Tbody, Tr, Td, TdEmpty } from "@/components/ui/Table"
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { localizeField, localizeFieldOrNull } from "@/lib/i18n/localizeField";
 
 type RiskFilter = "" | "HIGH" | "MEDIUM" | "LOW";
 type LicenseStatusFilter = "" | "ACTIVE" | "SUSPENDED" | "EXPIRED" | "REVOKED";
@@ -19,9 +20,11 @@ export function CarrierTable() {
   const [search, setSearch] = useState("");
   const [riskTier, setRiskTier] = useState<RiskFilter>("");
   const [licenseStatus, setLicenseStatus] = useState<LicenseStatusFilter>("");
+  const [region, setRegion] = useState("");
   const [page, setPage] = useState(1);
   const limit = 25;
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const { regions } = useCarrierRegions();
 
   const RISK_FILTERS = [
     { value: "" as RiskFilter, label: t("common.all") },
@@ -43,6 +46,7 @@ export function CarrierTable() {
     limit,
     riskTier: riskTier || undefined,
     licenseStatus: licenseStatus || undefined,
+    region: region || undefined,
     search: search || undefined,
   });
   const carriers = data?.carriers ?? [];
@@ -84,6 +88,22 @@ export function CarrierTable() {
           {LICENSE_STATUS_FILTERS.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
+            </option>
+          ))}
+        </Select>
+        <Select
+          aria-label={t("carriers.filterRegion")}
+          value={region}
+          onChange={(e) => {
+            setRegion(e.target.value);
+            setPage(1);
+          }}
+          className="w-auto"
+        >
+          <option value="">{t("carriers.regionAll")}</option>
+          {regions.map((r) => (
+            <option key={r.region} value={r.region}>
+              {localizeField(locale, r.region, r.regionEn)}
             </option>
           ))}
         </Select>
@@ -132,10 +152,10 @@ export function CarrierTable() {
             <Tr key={c.id}>
               <Td>
                 <Link href={`/carriers/${c.id}`} className="font-medium text-ink hover:text-forest">
-                  <bdi>{c.companyName}</bdi>
+                  <bdi>{localizeField(locale, c.companyName, c.companyNameEn)}</bdi>
                 </Link>
                 <div className="text-caption text-ink-muted">
-                  <bdi>{c.city}</bdi>
+                  <bdi>{localizeFieldOrNull(locale, c.city, c.cityEn)}</bdi>
                 </div>
               </Td>
               <Td num>{c.licenseNumber}</Td>

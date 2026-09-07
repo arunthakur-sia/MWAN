@@ -53,4 +53,33 @@ export const FEATURE_LABELS: Record<"ar" | "en", Record<string, string>> = {
   },
 };
 
+// One-line explanation shown when a user expands a contributing factor —
+// keyed the same way as FEATURE_LABELS.
+export const FEATURE_DESCRIPTIONS: Record<"ar" | "en", Record<string, string>> = {
+  ar: {
+    fleet_gap: "الفرق بين حجم الأسطول المُصرَّح به وعدد المركبات المرصودة فعليًا على الشبكة.",
+    fleet_gap_pct: "نسبة مركبات الأسطول غير المُصرَّح بها. الفجوة الصغيرة لا تعني دائمًا خطورة أقل. فبالنسبة لناقل يملك عددًا قليلًا من المركبات، قد تعني فجوة صغيرة أن جزءًا كبيرًا من الأسطول غير مسجل.",
+    actual_fleet_tga: "عدد المركبات المرصودة فعليًا وهي تعمل على شبكة TGA.",
+    declared_fleet_size: "عدد المركبات التي صرّح بها الناقل رسميًا للجهة التنظيمية.",
+    payment_compliance_rate: "نسبة الفواتير التي سددها الناقل في موعدها.",
+    overdue_count: "عدد الفواتير المتأخرة عن السداد حاليًا.",
+    partial_payment_ratio: "نسبة الفواتير التي سُددت جزئيًا فقط وليس بالكامل.",
+    declaration_trend_6q: "اتجاه حجم الأسطول المعلن للناقل خلال آخر 6 أرباع.",
+    ownership_complexity: "مدى تعقيد أو غموض هيكل ملكية الناقل.",
+    network_membership: "ما إذا كان الناقل يشترك في روابط ملكية مع ناقلين آخرين ضمن شبكة.",
+  },
+  en: {
+    fleet_gap: "Difference between the carrier's declared fleet size and vehicles actually observed on the network.",
+    fleet_gap_pct: "Share of the carrier's fleet that's undeclared. A small gap doesn't always mean lower risk. For a carrier with few vehicles, even a small gap can mean a large portion of the fleet is missing.",
+    actual_fleet_tga: "Number of vehicles actually observed operating on the TGA network.",
+    declared_fleet_size: "Number of vehicles the carrier has officially declared to the regulator.",
+    payment_compliance_rate: "Share of invoices the carrier has paid on time.",
+    overdue_count: "Number of invoices currently overdue for payment.",
+    partial_payment_ratio: "Share of invoices paid only partially rather than in full.",
+    declaration_trend_6q: "Direction of the carrier's declared fleet size over the last 6 quarters.",
+    ownership_complexity: "How layered or opaque the carrier's ownership structure is.",
+    network_membership: "Whether the carrier shares ownership ties with other carriers in a network.",
+  },
+};
+
 export const MODEL_VERSION_FALLBACK = "v1.0";

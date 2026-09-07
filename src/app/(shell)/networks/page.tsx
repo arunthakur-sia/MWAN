@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Network as NetworkIcon, Search } from "lucide-react";
 import { useNetworks } from "@/hooks/useNetworks";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { localizeField } from "@/lib/i18n/localizeField";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CardInteractive } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Field";
@@ -17,7 +18,7 @@ export default function NetworksPage() {
   const [search, setSearch] = useState("");
   const [gapFilter, setGapFilter] = useState<GapFilter>("");
   const { data, isLoading } = useNetworks({ search: search || undefined, gapStatus: gapFilter || undefined });
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const networks = data?.networks ?? [];
 
   const GAP_FILTERS: { value: GapFilter; label: string }[] = [
@@ -74,7 +75,7 @@ export default function NetworksPage() {
                   </bdi>
                 </div>
                 <p className="text-body font-medium text-ink">
-                  <bdi>{n.primaryOwnerName}</bdi>
+                  <bdi>{localizeField(locale, n.primaryOwnerName, n.primaryOwnerNameEn)}</bdi>
                 </p>
                 <p className="mt-1 text-caption text-ink-muted">
                   <span dir="ltr" className="font-mono tabular-nums">

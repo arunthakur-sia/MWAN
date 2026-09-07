@@ -7,6 +7,7 @@ import { Card, CardFlush } from "@/components/ui/Card";
 import { CardHeader } from "@/components/ui/CardHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Table, Thead, Th, Tbody, Tr, Td } from "@/components/ui/Table";
+import { LocalizedDateTime } from "@/components/shared/LocalizedDate";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -92,7 +93,9 @@ export default function AnalyticsPage() {
                       </span>
                     </Td>
                     <Td num>{pct(h.accuracy)}</Td>
-                    <Td num>{new Date(h.trainedAt).toLocaleString(locale === "ar" ? "ar-SA" : "en-US")}</Td>
+                    <Td num>
+                      <LocalizedDateTime value={h.trainedAt} locale={locale} />
+                    </Td>
                   </Tr>
                 ))}
               </Tbody>

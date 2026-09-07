@@ -7,6 +7,7 @@ import { CardHeader } from "@/components/ui/CardHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { localizeAlert } from "@/lib/i18n/localizeAlert";
+import { localizeField } from "@/lib/i18n/localizeField";
 
 /**
  * THE ALIGNMENT BUG, and why every row started at a different x:
@@ -95,7 +96,7 @@ export function RecentAlerts() {
                         renders inside an English UI when locale=en, and without
                         isolation the bidi algorithm lets it reorder against the
                         surrounding run. bdi scopes the direction to the name. */}
-                    <bdi>{a.companyName}</bdi>
+                    <bdi>{localizeField(locale, a.companyName, a.companyNameEn)}</bdi>
                   </Link>
                   <p className="truncate text-caption text-ink-muted">{localized.title}</p>
                 </div>

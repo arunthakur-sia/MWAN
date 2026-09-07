@@ -10,8 +10,10 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LocalizedDateTime } from "@/components/shared/LocalizedDate";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { localizeAlert } from "@/lib/i18n/localizeAlert";
+import { localizeField } from "@/lib/i18n/localizeField";
 
 /**
  * THE ALIGNMENT BUG (see RecentAlerts.tsx for the full account): the row was
@@ -120,18 +122,18 @@ export default function AlertsPage() {
                           rendering inside a possibly-English UI, and without
                           isolation the bidi algorithm lets it reorder against
                           the surrounding run. */}
-                      <bdi>{a.companyName}</bdi>
+                      <bdi>{localizeField(locale, a.companyName, a.companyNameEn)}</bdi>
                     </Link>
                     <p className="mt-0.5 truncate text-body text-ink-muted">{localized.title}</p>
                     <p className="mt-1 truncate text-caption text-ink-muted">{localized.description}</p>
                     <p className="mt-1 text-caption text-ink-muted" dir="ltr">
-                      {new Date(a.createdAt).toLocaleString(locale === "ar" ? "ar-SA" : "en-US")}
+                      <LocalizedDateTime value={a.createdAt} locale={locale} />
                     </p>
                   </div>
                   {!a.isRead && (
                     <button
                       onClick={() => markRead(a.id)}
-                      aria-label={`${t("alerts.markRead")} — ${a.companyName}`}
+                      aria-label={`${t("alerts.markRead")} — ${localizeField(locale, a.companyName, a.companyNameEn)}`}
                       className="shrink-0 text-caption text-forest hover:underline underline-offset-2"
                     >
                       {t("alerts.markRead")}

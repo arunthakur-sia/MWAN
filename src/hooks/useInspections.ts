@@ -7,6 +7,7 @@ export interface InspectionQueueItem {
   id: string;
   carrierId: string;
   companyName: string;
+  companyNameEn: string;
   licenseNumber: string;
   scheduledDate: string;
   inspectorName: string | null;

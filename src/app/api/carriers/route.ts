@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "25");
   const riskTier = searchParams.get("riskTier"); // HIGH, MEDIUM, LOW
   const licenseStatus = searchParams.get("licenseStatus"); // ACTIVE, SUSPENDED, EXPIRED, REVOKED
+  const region = searchParams.get("region");
   const sortBy = searchParams.get("sortBy") || "overallScore";
   const sortDir = searchParams.get("sortDir") || "desc";
   const search = searchParams.get("search");
@@ -23,6 +24,9 @@ export async function GET(req: NextRequest) {
   if (licenseStatus) {
     where.licenseStatus = licenseStatus as never;
   }
+  if (region) {
+    where.region = region;
+  }
 
   const carriers = await prisma.carrier.findMany({
     where,
@@ -30,11 +34,14 @@ export async function GET(req: NextRequest) {
       id: true,
       licenseNumber: true,
       companyName: true,
+      companyNameEn: true,
       companyId: true,
       declaredFleetSize: true,
       licenseStatus: true,
       city: true,
+      cityEn: true,
       region: true,
+      regionEn: true,
       complianceScores: {
         orderBy: { computedAt: "desc" },
         take: 1,
@@ -48,13 +55,16 @@ export async function GET(req: NextRequest) {
     id: c.id,
     licenseNumber: c.licenseNumber,
     companyName: c.companyName,
+    companyNameEn: c.companyNameEn ?? c.companyName,
     companyId: c.companyId,
     declaredFleet: c.declaredFleetSize,
     actualFleet: c._count.vehicles,
     fleetGap: c._count.vehicles - c.declaredFleetSize,
     licenseStatus: c.licenseStatus,
     city: c.city,
+    cityEn: c.cityEn ?? c.city,
     region: c.region,
+    regionEn: c.regionEn ?? c.region,
     score: c.complianceScores[0]
       ? {
           overallScore: Number(c.complianceScores[0].overallScore),

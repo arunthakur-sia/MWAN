@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { NetworkGraph } from "@/components/networks/NetworkGraph";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { localizeField } from "@/lib/i18n/localizeField";
 import { PageHeader, BackLink } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { CardHeader } from "@/components/ui/CardHeader";
@@ -11,17 +12,18 @@ export interface NetworkDetailData {
   id: string;
   networkName: string | null;
   primaryOwnerName: string;
+  primaryOwnerNameEn?: string;
   memberCount: number;
   totalDeclared: number;
   totalActual: number;
   combinedGap: number;
-  members: { id: string; carrierId: string; companyName: string; declaredFleetSize: number }[];
-  nodes: { id: string; type: "company" | "person"; label: string }[];
+  members: { id: string; carrierId: string; companyName: string; companyNameEn?: string; declaredFleetSize: number }[];
+  nodes: { id: string; type: "company" | "person"; label: string; labelEn?: string }[];
   links: { source: string; target: string; relation: string; weight: number }[];
 }
 
 export function NetworkDetailView({ data }: { data: NetworkDetailData }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
 
   return (
     <div className="space-y-3">
@@ -29,7 +31,7 @@ export function NetworkDetailView({ data }: { data: NetworkDetailData }) {
         /* <bdi>: an owner's name is Arabic DATA that renders inside an English UI
            when locale=en, and without isolation the bidi algorithm reorders it
            against the surrounding run. Possible now that title takes a ReactNode. */
-        title={<bdi>{data.primaryOwnerName}</bdi>}
+        title={<bdi>{localizeField(locale, data.primaryOwnerName, data.primaryOwnerNameEn)}</bdi>}
         back={
           <Link href="/networks">
             <BackLink>{t("networkDetail.back")}</BackLink>
@@ -69,7 +71,7 @@ export function NetworkDetailView({ data }: { data: NetworkDetailData }) {
           {data.members.map((m) => (
             <li key={m.id} className="flex items-center justify-between py-3">
               <Link href={`/carriers/${m.carrierId}`} className="text-body text-ink hover:text-forest">
-                <bdi>{m.companyName}</bdi>
+                <bdi>{localizeField(locale, m.companyName, m.companyNameEn)}</bdi>
               </Link>
               <span dir="ltr" className="font-mono text-caption tabular-nums text-ink-muted">
                 {m.declaredFleetSize.toLocaleString("en-US")} {t("networkDetail.declaredVehiclesSuffix")}

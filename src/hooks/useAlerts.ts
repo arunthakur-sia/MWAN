@@ -7,6 +7,7 @@ export interface AlertItem {
   id: string;
   carrierId: string;
   companyName: string;
+  companyNameEn: string;
   licenseNumber: string;
   alertType: string;
   severity: "HIGH" | "MEDIUM" | "LOW";

@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
           }
         : {}),
     },
-    include: { carrier: { select: { companyName: true, licenseNumber: true } } },
+    include: { carrier: { select: { companyName: true, companyNameEn: true, licenseNumber: true } } },
     orderBy: { createdAt: "desc" },
   });
 
@@ -39,6 +39,7 @@ export async function GET(req: NextRequest) {
       id: a.id,
       carrierId: a.carrierId,
       companyName: a.carrier.companyName,
+      companyNameEn: a.carrier.companyNameEn ?? a.carrier.companyName,
       licenseNumber: a.carrier.licenseNumber,
       alertType: a.alertType,
       severity: a.severity,

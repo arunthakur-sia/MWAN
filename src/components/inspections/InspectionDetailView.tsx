@@ -5,8 +5,10 @@ import { StatCard } from "@/components/shared/StatCard";
 import { OutcomeForm } from "@/components/inspections/OutcomeForm";
 import { Card } from "@/components/ui/Card";
 import { CardHeader } from "@/components/ui/CardHeader";
+import { LocalizedDate } from "@/components/shared/LocalizedDate";
 import { PageHeader, BackLink } from "@/components/ui/PageHeader";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { localizeField } from "@/lib/i18n/localizeField";
 
 export interface InspectionDetailData {
   id: string;
@@ -18,6 +20,7 @@ export interface InspectionDetailData {
   carrier: {
     id: string;
     companyName: string;
+    companyNameEn?: string;
     declaredFleetSize: number;
     actualFleet: number;
     riskTier: "HIGH" | "MEDIUM" | "LOW" | null;
@@ -45,7 +48,7 @@ export function InspectionDetailView({ data }: { data: InspectionDetailData }) {
            name inside a possibly-English UI. */
         title={
           <Link href={`/carriers/${data.carrier.id}`} className="transition-colors hover:text-mint">
-            <bdi>{data.carrier.companyName}</bdi>
+            <bdi>{localizeField(locale, data.carrier.companyName, data.carrier.companyNameEn)}</bdi>
           </Link>
         }
         back={
@@ -56,7 +59,7 @@ export function InspectionDetailView({ data }: { data: InspectionDetailData }) {
         meta={
           <>
             <span dir="ltr" className="font-mono tabular-nums">
-              {new Date(data.scheduledDate).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")}
+              <LocalizedDate value={data.scheduledDate} locale={locale} />
             </span>
             {data.carrier.riskTier && <RiskBadge tier={data.carrier.riskTier} />}
           </>

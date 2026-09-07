@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     orderBy: { combinedGap: "desc" },
     include: {
       members: {
-        include: { carrier: { select: { id: true, companyName: true } } },
+        include: { carrier: { select: { id: true, companyName: true, companyNameEn: true } } },
       },
     },
   });
@@ -40,12 +40,18 @@ export async function GET(req: NextRequest) {
       id: n.id,
       networkName: n.networkName,
       primaryOwnerName: n.primaryOwnerName,
+      primaryOwnerNameEn: n.primaryOwnerNameEn ?? n.primaryOwnerName,
       memberCount: n.memberCount,
       totalDeclared: n.totalDeclared,
       totalActual: n.totalActual,
       combinedGap: n.combinedGap,
       sharedAddress: n.sharedAddress,
-      members: n.members.map((m) => ({ id: m.carrier.id, companyName: m.carrier.companyName })),
+      sharedAddressEn: n.sharedAddressEn ?? n.sharedAddress,
+      members: n.members.map((m) => ({
+        id: m.carrier.id,
+        companyName: m.carrier.companyName,
+        companyNameEn: m.carrier.companyNameEn ?? m.carrier.companyName,
+      })),
     })),
   });
 }

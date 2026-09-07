@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { localizeField } from "@/lib/i18n/localizeField";
 import { Card } from "@/components/ui/Card";
 import { BRAND, INK, SURFACE } from "@/lib/design/tokens";
 
@@ -20,6 +21,7 @@ interface Node {
   id: string;
   type: "company" | "person";
   label: string;
+  labelEn?: string;
 }
 interface Link {
   source: string;
@@ -33,7 +35,7 @@ type SimLink = d3.SimulationLinkDatum<SimNode> & Omit<Link, "source" | "target">
 
 export function NetworkGraph({ nodes, links }: { nodes: Node[]; links: Link[] }) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
 
   useEffect(() => {
     if (!svgRef.current || nodes.length === 0) return;
@@ -103,7 +105,7 @@ export function NetworkGraph({ nodes, links }: { nodes: Node[]; links: Link[] })
       .selectAll("text")
       .data(simNodes)
       .join("text")
-      .text((d) => d.label)
+      .text((d) => localizeField(locale, d.label, d.labelEn))
       .attr("font-size", 10)
       .attr("text-anchor", "middle")
       .attr("dy", (d) => (d.type === "company" ? 28 : 20))
@@ -122,7 +124,7 @@ export function NetworkGraph({ nodes, links }: { nodes: Node[]; links: Link[] })
     return () => {
       simulation.stop();
     };
-  }, [nodes, links]);
+  }, [nodes, links, locale]);
 
   return (
     <Card>

@@ -1,8 +1,10 @@
 "use client";
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { CardHeader } from "@/components/ui/CardHeader";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { FEATURE_LABELS } from "@/lib/utils/constants";
+import { FEATURE_LABELS, FEATURE_DESCRIPTIONS } from "@/lib/utils/constants";
 
 interface Props {
   score: number; // 0-100
@@ -29,6 +31,8 @@ export function ComplianceScore({ score, riskTier, factors, factorValues, confid
   const circumference = 2 * Math.PI * 54;
   const progress = (score / 100) * circumference;
   const labels = FEATURE_LABELS[locale];
+  const descriptions = FEATURE_DESCRIPTIONS[locale];
+  const [expanded, setExpanded] = useState<number | null>(null);
 
   return (
     <Card>
@@ -65,24 +69,46 @@ export function ComplianceScore({ score, riskTier, factors, factorValues, confid
 
         <div className="flex-1 min-w-[200px]">
           <p className="text-body text-ink-muted mb-3">{t("carrierDetail.topFactors")}</p>
-          <ol className="space-y-2">
+          <ol className="space-y-1">
             {factors
               .filter((f) => f)
-              .map((f, i) => (
-                <li key={i} className="flex items-center justify-between gap-2 text-body">
-                  <span className="flex items-center gap-2">
-                    <span className="size-5 shrink-0 rounded-control bg-surface-sunken text-caption font-semibold text-ink-muted flex items-center justify-center">
-                      {i + 1}
-                    </span>
-                    <span className="text-ink">{labels[f] ?? f}</span>
-                  </span>
-                  {factorValues?.[f] && (
-                    <span dir="ltr" className="font-mono tabular-nums text-ink-muted">
-                      {factorValues[f]}
-                    </span>
-                  )}
-                </li>
-              ))}
+              .map((f, i) => {
+                const isOpen = expanded === i;
+                const description = descriptions[f];
+                return (
+                  <li key={i}>
+                    <button
+                      type="button"
+                      onClick={() => setExpanded(isOpen ? null : i)}
+                      aria-expanded={isOpen}
+                      disabled={!description}
+                      className="w-full flex items-center justify-between gap-2 text-body py-1 text-start disabled:cursor-default"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="size-5 shrink-0 rounded-control bg-surface-sunken text-caption font-semibold text-ink-muted flex items-center justify-center">
+                          {i + 1}
+                        </span>
+                        <span className="text-ink">{labels[f] ?? f}</span>
+                      </span>
+                      <span className="flex items-center gap-2">
+                        {factorValues?.[f] && (
+                          <span dir="ltr" className="font-mono tabular-nums text-ink-muted">
+                            {factorValues[f]}
+                          </span>
+                        )}
+                        {description && (
+                          <ChevronDown
+                            className={`size-4 shrink-0 text-ink-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
+                          />
+                        )}
+                      </span>
+                    </button>
+                    {isOpen && description && (
+                      <p className="text-caption text-ink-muted ps-7 pb-2">{description}</p>
+                    )}
+                  </li>
+                );
+              })}
           </ol>
         </div>
       </div>

@@ -17,16 +17,26 @@ export async function POST() {
     prisma.carrier.findMany({
       include: { _count: { select: { vehicles: { where: { registrationStatus: "ACTIVE" } } } } },
     }),
-    prisma.shareholder.findMany({ select: { nationalId: true, name: true } }),
-    prisma.director.findMany({ select: { nationalId: true, name: true } }),
-    prisma.companyRegistry.findMany({ select: { companyId: true, registeredAddress: true } }),
+    prisma.shareholder.findMany({ select: { nationalId: true, name: true, nameEn: true } }),
+    prisma.director.findMany({ select: { nationalId: true, name: true, nameEn: true } }),
+    prisma.companyRegistry.findMany({
+      select: { companyId: true, registeredAddress: true, registeredAddressEn: true },
+    }),
   ]);
 
   const carrierByCompanyId = new Map(carriers.map((c) => [c.companyId, c]));
   const nameByNationalId = new Map<string, string>();
-  for (const d of directors) nameByNationalId.set(d.nationalId, d.name);
-  for (const s of shareholders) nameByNationalId.set(s.nationalId, s.name);
+  const nameEnByNationalId = new Map<string, string>();
+  for (const d of directors) {
+    nameByNationalId.set(d.nationalId, d.name);
+    if (d.nameEn) nameEnByNationalId.set(d.nationalId, d.nameEn);
+  }
+  for (const s of shareholders) {
+    nameByNationalId.set(s.nationalId, s.name);
+    if (s.nameEn) nameEnByNationalId.set(s.nationalId, s.nameEn);
+  }
   const addressByCompanyId = new Map(registries.map((r) => [r.companyId, r.registeredAddress]));
+  const addressEnByCompanyId = new Map(registries.map((r) => [r.companyId, r.registeredAddressEn]));
 
   const networkRows: Prisma.OwnershipNetworkCreateManyInput[] = [];
   const membershipRows: Prisma.NetworkMembershipCreateManyInput[] = [];
@@ -40,7 +50,9 @@ export async function POST() {
     const totalDeclared = memberCarriers.reduce((sum, c) => sum + c.declaredFleetSize, 0);
     const totalActual = memberCarriers.reduce((sum, c) => sum + c._count.vehicles, 0);
     const primaryOwnerName = nameByNationalId.get(net.primary_owner_id) ?? "Unknown";
+    const primaryOwnerNameEn = nameEnByNationalId.get(net.primary_owner_id) ?? primaryOwnerName;
     const sharedAddress = addressByCompanyId.get(net.member_company_ids[0]) ?? null;
+    const sharedAddressEn = addressEnByCompanyId.get(net.member_company_ids[0]) ?? sharedAddress;
 
     const networkId = randomUUID();
     networkRows.push({
@@ -48,11 +60,13 @@ export async function POST() {
       networkName: net.network_id,
       primaryOwnerId: net.primary_owner_id,
       primaryOwnerName,
+      primaryOwnerNameEn,
       memberCount: memberCarriers.length,
       totalDeclared,
       totalActual,
       combinedGap: totalActual - totalDeclared,
       sharedAddress,
+      sharedAddressEn,
     });
 
     for (const c of memberCarriers) {

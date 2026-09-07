@@ -10,10 +10,71 @@ import { BRAND, INK } from "@/lib/design/tokens";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
+interface DeclarationPoint {
+  period: string;
+  declaredFleet: number;
+  changeVsPrior: number;
+  changeReason: string | null;
+}
+
+// Raw values stored in Declaration.changeReason -> carrierDetail.fleetChangeReasons.* key.
+const CHANGE_REASON_KEYS: Record<string, string> = {
+  "Seasonal adjustment": "seasonalAdjustment",
+  "No change": "noChange",
+  "Fleet expansion": "fleetExpansion",
+  "Merger/acquisition": "mergerAcquisition",
+  "New contract": "newContract",
+  "Vehicle decommissioned": "vehicleDecommissioned",
+  "Vehicle transferred": "vehicleTransferred",
+  "License expired": "licenseExpired",
+  "License suspended": "licenseSuspended",
+};
+
+function FleetTooltip({
+  active,
+  payload,
+  t,
+}: {
+  active?: boolean;
+  payload?: ReadonlyArray<{ payload?: unknown }>;
+  t: (key: string) => string;
+}) {
+  const point = payload?.[0]?.payload as DeclarationPoint | undefined;
+  if (!active || !point) return null;
+  const reasonKey = point.changeReason ? CHANGE_REASON_KEYS[point.changeReason] : null;
+  const reasonLabel = reasonKey ? t(`carrierDetail.fleetChangeReasons.${reasonKey}`) : point.changeReason;
+  const isLapse = reasonKey === "licenseExpired" || reasonKey === "licenseSuspended";
+
+  return (
+    <div className="rounded-card border border-border bg-surface p-3 shadow-card-lift text-caption max-w-[220px]">
+      <p className="text-body font-semibold text-ink">{point.period}</p>
+      <p className="mt-1 text-ink-muted">
+        {t("carrierDetail.declaredFleet")}:{" "}
+        <span dir="ltr" className="font-mono tabular-nums text-ink">
+          {point.declaredFleet}
+        </span>
+      </p>
+      {point.changeVsPrior !== 0 && (
+        <p className={point.changeVsPrior > 0 ? "text-forest" : "text-risk-high"}>
+          <span dir="ltr" className="font-mono tabular-nums">
+            {point.changeVsPrior > 0 ? `+${point.changeVsPrior}` : point.changeVsPrior}
+          </span>{" "}
+          {t("carrierDetail.vsPriorQuarter")}
+        </p>
+      )}
+      {reasonLabel && (
+        <p className={`mt-1 ${isLapse ? "text-risk-high font-medium" : "text-ink-muted"}`}>
+          {t("carrierDetail.reasonLabel")}: {reasonLabel}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function FleetTimeline({ carrierId }: { carrierId: string }) {
   const { t } = useLocale();
   const { data, isLoading } = useSWR<{
-    declarations: { period: string; declaredFleet: number }[];
+    declarations: DeclarationPoint[];
   }>(`/api/carriers/${carrierId}/timeline`, fetcher);
 
   const declarations = data?.declarations ?? [];
@@ -30,7 +91,7 @@ export function FleetTimeline({ carrierId }: { carrierId: string }) {
               <CartesianGrid strokeDasharray="3 3" stroke={INK.border} />
               <XAxis dataKey="period" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-              <Tooltip />
+              <Tooltip content={({ active, payload }) => <FleetTooltip active={active} payload={payload} t={t} />} />
               <Line type="monotone" dataKey="declaredFleet" stroke={BRAND.forest} strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
