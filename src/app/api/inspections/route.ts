@@ -6,18 +6,24 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status"); // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
   const riskTier = searchParams.get("riskTier"); // HIGH, MEDIUM, LOW
+  const region = searchParams.get("region");
   const search = searchParams.get("search");
 
   const inspections = await prisma.inspection.findMany({
     where: {
       ...(status ? { status: status as never } : {}),
-      ...(search
+      ...(region || search
         ? {
             carrier: {
-              OR: [
-                { companyName: { contains: search, mode: "insensitive" } },
-                { licenseNumber: { contains: search, mode: "insensitive" } },
-              ],
+              ...(region ? { region } : {}),
+              ...(search
+                ? {
+                    OR: [
+                      { companyName: { contains: search, mode: "insensitive" } },
+                      { licenseNumber: { contains: search, mode: "insensitive" } },
+                    ],
+                  }
+                : {}),
             },
           }
         : {}),
@@ -36,6 +42,10 @@ export async function GET(req: NextRequest) {
       companyName: i.carrier.companyName,
       companyNameEn: i.carrier.companyNameEn ?? i.carrier.companyName,
       licenseNumber: i.carrier.licenseNumber,
+      city: i.carrier.city,
+      cityEn: i.carrier.cityEn ?? i.carrier.city,
+      region: i.carrier.region,
+      regionEn: i.carrier.regionEn ?? i.carrier.region,
       scheduledDate: i.scheduledDate,
       inspectorName: i.inspectorName,
       status: i.status,

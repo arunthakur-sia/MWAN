@@ -62,9 +62,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>
       {/* The sidebar shell (p-3 + gap-3 float, min-w-0 on <main>) now lives in
-          app/(shell)/layout.tsx — it only applies to the authenticated app
-          routes. /login and / (the post-login video landing page) render
-          full-bleed with no sidebar chrome. */}
+          app/(shell)/layout.tsx — it only applies to the app routes. / (the
+          video landing page) renders full-bleed with no sidebar chrome. */}
       <body className="min-h-screen font-arabic">
         <LocaleProvider>{children}</LocaleProvider>
       </body>

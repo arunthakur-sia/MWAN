@@ -3,15 +3,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { useInspections } from "@/hooks/useInspections";
+import { useCarrierRegions } from "@/hooks/useCarriers";
 import { RiskBadge } from "@/components/shared/RiskBadge";
 import { CardFlush } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Field";
+import { Input, Select } from "@/components/ui/Field";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Table, Thead, Th, Tbody, Tr, Td, TdEmpty } from "@/components/ui/Table";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { LocalizedDate } from "@/components/shared/LocalizedDate";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { localizeField } from "@/lib/i18n/localizeField";
+import { localizeField, localizeFieldOrNull } from "@/lib/i18n/localizeField";
 
 type RiskFilter = "" | "HIGH" | "MEDIUM" | "LOW";
 
@@ -19,12 +20,15 @@ export function InspectionQueue() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("SCHEDULED");
   const [riskTier, setRiskTier] = useState<RiskFilter>("");
+  const [region, setRegion] = useState("");
   const { data, isLoading } = useInspections({
     status: status || undefined,
     riskTier: riskTier || undefined,
+    region: region || undefined,
     search: search || undefined,
   });
   const { t, locale } = useLocale();
+  const { regions } = useCarrierRegions();
   const inspections = data?.inspections ?? [];
 
   const STATUS_FILTERS = [
@@ -63,11 +67,26 @@ export function InspectionQueue() {
         </div>
         <SegmentedControl name="status" value={status} onChange={setStatus} options={STATUS_FILTERS} />
         <SegmentedControl name="risk" value={riskTier} onChange={setRiskTier} options={RISK_FILTERS} />
+        <Select
+          aria-label={t("carriers.filterRegion")}
+          value={region}
+          onChange={(e) => setRegion(e.target.value)}
+          className="w-auto"
+        >
+          <option value="">{t("carriers.regionAll")}</option>
+          {regions.map((r) => (
+            <option key={r.region} value={r.region}>
+              {localizeField(locale, r.region, r.regionEn)}
+            </option>
+          ))}
+        </Select>
       </div>
 
       <Table>
         <Thead>
           <Th>{t("inspections.company")}</Th>
+          <Th>{t("carriers.city")}</Th>
+          <Th>{t("carriers.region")}</Th>
           <Th>{t("inspections.scheduledDate")}</Th>
           <Th>{t("inspections.inspector")}</Th>
           <Th>{t("inspections.status")}</Th>
@@ -84,6 +103,12 @@ export function InspectionQueue() {
                 <Td>
                   <Skeleton className="h-4 w-32" />
                   <Skeleton className="mt-1.5 h-3 w-20" />
+                </Td>
+                <Td>
+                  <Skeleton className="h-4 w-20" />
+                </Td>
+                <Td>
+                  <Skeleton className="h-4 w-20" />
                 </Td>
                 <Td num>
                   <Skeleton className="h-4 w-16" />
@@ -104,7 +129,7 @@ export function InspectionQueue() {
             ))}
 
           {!isLoading && inspections.length === 0 && (
-            <TdEmpty colSpan={6}>{t("inspections.noInspections")}</TdEmpty>
+            <TdEmpty colSpan={8}>{t("inspections.noInspections")}</TdEmpty>
           )}
 
           {!isLoading &&
@@ -123,6 +148,12 @@ export function InspectionQueue() {
                       {i.licenseNumber}
                     </span>
                   </div>
+                </Td>
+                <Td>
+                  <bdi>{localizeFieldOrNull(locale, i.city, i.cityEn) ?? "—"}</bdi>
+                </Td>
+                <Td>
+                  <bdi>{localizeFieldOrNull(locale, i.region, i.regionEn) ?? "—"}</bdi>
                 </Td>
                 <Td num>
                   <LocalizedDate value={i.scheduledDate} locale={locale} />

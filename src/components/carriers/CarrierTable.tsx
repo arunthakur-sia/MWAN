@@ -112,6 +112,8 @@ export function CarrierTable() {
       <Table>
         <Thead>
           <Th>{t("carriers.company")}</Th>
+          <Th>{t("carriers.city")}</Th>
+          <Th>{t("carriers.region")}</Th>
           <Th>{t("carriers.licenseNumber")}</Th>
           <Th>{t("carriers.declared")}</Th>
           <Th>{t("carriers.actual")}</Th>
@@ -125,7 +127,12 @@ export function CarrierTable() {
               <Tr key={i}>
                 <Td>
                   <Skeleton className="h-4 w-32" />
-                  <Skeleton className="mt-1.5 h-3 w-20" />
+                </Td>
+                <Td>
+                  <Skeleton className="h-4 w-20" />
+                </Td>
+                <Td>
+                  <Skeleton className="h-4 w-20" />
                 </Td>
                 <Td num>
                   <Skeleton className="h-4 w-16" />
@@ -147,16 +154,19 @@ export function CarrierTable() {
                 </Td>
               </Tr>
             ))}
-          {!isLoading && carriers.length === 0 && <TdEmpty colSpan={7}>{t("common.noResults")}</TdEmpty>}
+          {!isLoading && carriers.length === 0 && <TdEmpty colSpan={9}>{t("common.noResults")}</TdEmpty>}
           {carriers.map((c) => (
             <Tr key={c.id}>
               <Td>
                 <Link href={`/carriers/${c.id}`} className="font-medium text-ink hover:text-forest">
                   <bdi>{localizeField(locale, c.companyName, c.companyNameEn)}</bdi>
                 </Link>
-                <div className="text-caption text-ink-muted">
-                  <bdi>{localizeFieldOrNull(locale, c.city, c.cityEn)}</bdi>
-                </div>
+              </Td>
+              <Td>
+                <bdi>{localizeFieldOrNull(locale, c.city, c.cityEn) ?? "—"}</bdi>
+              </Td>
+              <Td>
+                <bdi>{localizeFieldOrNull(locale, c.region, c.regionEn) ?? "—"}</bdi>
               </Td>
               <Td num>{c.licenseNumber}</Td>
               <Td num>{c.declaredFleet}</Td>

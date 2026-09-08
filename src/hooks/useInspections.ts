@@ -9,6 +9,10 @@ export interface InspectionQueueItem {
   companyName: string;
   companyNameEn: string;
   licenseNumber: string;
+  city: string | null;
+  cityEn: string | null;
+  region: string | null;
+  regionEn: string | null;
   scheduledDate: string;
   inspectorName: string | null;
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
@@ -17,10 +21,13 @@ export interface InspectionQueueItem {
   riskTier: "HIGH" | "MEDIUM" | "LOW" | null;
 }
 
-export function useInspections(params: { status?: string; riskTier?: string; search?: string } = {}) {
+export function useInspections(
+  params: { status?: string; riskTier?: string; region?: string; search?: string } = {},
+) {
   const query = new URLSearchParams();
   if (params.status) query.set("status", params.status);
   if (params.riskTier) query.set("riskTier", params.riskTier);
+  if (params.region) query.set("region", params.region);
   if (params.search) query.set("search", params.search);
 
   const { data, error, isLoading, mutate } = useSWR<{ inspections: InspectionQueueItem[] }>(
