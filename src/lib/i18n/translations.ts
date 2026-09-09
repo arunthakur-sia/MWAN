@@ -26,6 +26,7 @@ export const translations = {
       inspections: "التفتيش",
       alerts: "التنبيهات",
       analytics: "التحليلات",
+      getStarted: "ابدأ الآن",
     },
     dashboard: {
       title: "لوحة المتابعة",
@@ -263,6 +264,7 @@ export const translations = {
       inspections: "Inspections",
       alerts: "Alerts",
       analytics: "Analytics",
+      getStarted: "Get Started",
     },
     dashboard: {
       title: "Dashboard",

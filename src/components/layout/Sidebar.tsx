@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Truck, Network, ClipboardCheck, Bell, BarChart3, Languages } from "lucide-react";
+import { LayoutDashboard, Truck, Network, ClipboardCheck, Bell, BarChart3, Languages, PlayCircle } from "lucide-react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const navItems = [
@@ -160,6 +160,19 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Mirrors the language toggle's outlined-pill treatment rather than the
+          nav pills' fill treatment, since this is an escape hatch to the intro
+          video (/) rather than a section of the app shell itself. */}
+      <div className="border-t border-white/10 p-3">
+        <Link
+          href="/"
+          className="flex items-center justify-center gap-2 rounded-full border border-mint/40 px-4 py-2.5 text-body font-medium text-mint hover:bg-mint/10 hover:text-white hover:border-mint/60 transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-mint"
+        >
+          <PlayCircle size={18} />
+          {t("nav.getStarted")}
+        </Link>
+      </div>
     </aside>
   );
 }
