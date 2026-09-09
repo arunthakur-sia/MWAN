@@ -35,8 +35,20 @@ export function LicenseValidityTimeline({ issueDate, lastRenewalDate, endDate, l
   const elapsedPct = clampPct(((now - issue) / span) * 100);
   const renewalPct = renewal != null ? clampPct(((renewal - issue) / span) * 100) : null;
   const daysToExpiry = Math.round((end - now) / DAY_MS);
+  const absDaysToExpiry = Math.abs(daysToExpiry);
   const isExpired = licenseStatus === "EXPIRED" || now > end;
   const isSuspended = licenseStatus === "SUSPENDED";
+
+  // Jan 1 boundaries strictly between issue and end, so each full calendar
+  // year crossed by the license gets a label along the bar. The endpoints
+  // already show their full dates below, so boundaries there are skipped.
+  const yearTicks: { pct: number; year: number }[] = [];
+  for (let year = new Date(issue).getUTCFullYear() + 1; year <= new Date(end).getUTCFullYear(); year++) {
+    const yearStart = Date.UTC(year, 0, 1);
+    if (yearStart > issue && yearStart < end) {
+      yearTicks.push({ pct: ((yearStart - issue) / span) * 100, year });
+    }
+  }
 
   const barTone = isExpired ? "bg-risk-high" : isSuspended ? "bg-risk-medium" : "bg-forest";
   const todayDotTone = isExpired ? "bg-risk-high" : isSuspended ? "bg-risk-medium" : "bg-forest";
@@ -47,6 +59,9 @@ export function LicenseValidityTimeline({ issueDate, lastRenewalDate, endDate, l
       <div className="pt-4">
         <div className="relative h-2 rounded-full bg-surface-sunken">
           <div className={`absolute inset-y-0 start-0 rounded-full ${barTone}`} style={{ width: `${elapsedPct}%` }} />
+          {yearTicks.map(({ pct, year }) => (
+            <div key={year} className="absolute inset-y-0 w-px bg-surface/70" style={{ insetInlineStart: `${pct}%` }} />
+          ))}
           {renewalPct != null && (
             <div
               className="absolute top-1/2 size-3 -translate-y-1/2 rounded-full border-2 border-surface bg-info"
@@ -62,6 +77,20 @@ export function LicenseValidityTimeline({ issueDate, lastRenewalDate, endDate, l
             style={{ insetInlineStart: `${elapsedPct}%`, transform: "translate(-50%, -50%)" }}
           />
         </div>
+        {yearTicks.length > 0 && (
+          <div className="relative mt-1 h-4">
+            {yearTicks.map(({ pct, year }) => (
+              <span
+                key={year}
+                dir="ltr"
+                className="absolute top-0 -translate-x-1/2 font-mono text-caption tabular-nums text-ink-muted"
+                style={{ insetInlineStart: `${pct}%` }}
+              >
+                {year}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="mt-4 grid grid-cols-3 gap-2 text-caption">
           <div>
@@ -90,7 +119,7 @@ export function LicenseValidityTimeline({ issueDate, lastRenewalDate, endDate, l
         <p className={`mt-3 text-caption ${isExpired ? "text-risk-high" : isSuspended ? "text-risk-medium" : "text-ink-muted"}`}>
           {isSuspended && `${t("carrierDetail.licenseSuspendedNote")} · `}
           <span dir="ltr" className="font-mono tabular-nums">
-            {Math.abs(daysToExpiry)}
+            {absDaysToExpiry}
           </span>{" "}
           {daysToExpiry >= 0 ? t("carrierDetail.daysUntilExpiry") : t("carrierDetail.daysSinceExpiry")}
         </p>

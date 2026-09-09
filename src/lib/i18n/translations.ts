@@ -26,7 +26,7 @@ export const translations = {
       inspections: "التفتيش",
       alerts: "التنبيهات",
       analytics: "التحليلات",
-      getStarted: "ابدأ الآن",
+      getStarted: "الرئيسية",
     },
     dashboard: {
       title: "لوحة المتابعة",
@@ -236,7 +236,7 @@ export const translations = {
       title: "الذكاء التنظيمي المدعوم بالذكاء الاصطناعي",
       subtitle: "كشف والتنبؤ بالتصريح الناقص لمركبات الشاحنات باستخدام الذكاء الاصطناعي.",
       getStarted: "ابدأ الآن",
-      footer: "مركز مواءمة النقل الوطني",
+      footer: "بدعم من Sia",
     },
   },
   en: {
@@ -264,7 +264,7 @@ export const translations = {
       inspections: "Inspections",
       alerts: "Alerts",
       analytics: "Analytics",
-      getStarted: "Get Started",
+      getStarted: "Home",
     },
     dashboard: {
       title: "Dashboard",
@@ -472,7 +472,7 @@ export const translations = {
       title: "AI-Powered Compliance Intelligence",
       subtitle: "AI-driven detection and prediction of truck fleet under-declaration.",
       getStarted: "Get Started",
-      footer: "National Transport Alignment Center",
+      footer: "Powered by Sia",
     },
   },
 } as const;
